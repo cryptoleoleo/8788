@@ -46,3 +46,5 @@ node tests/original-page.mjs
 不要提交任何钱包身份目录、会话、私钥、助记词、浏览器用户资料或 `.env`。朋友应在自己的设备上重新配对；发布包只包含静态程序、依赖、安装器和测试材料。
 
 Windows 版保留相同页面、交易逻辑、多钱包分组、跟单和 Debot CA 识别。Windows 专用改动为 `.cmd` 入口、CLI 路径查找、手动 HTTP/HTTPS 代理读取、用户安装/数据目录，以及跨平台的隔离模块 file URL。Windows runner 只用虚拟 CLI 验证安装与服务，不代表真实钱包配对、实盘或 Chrome 侧栏已通过验收。
+
+Windows CI 已通过：[运行记录](https://github.com/cryptoleoleo/8788/actions/runs/40534360538)、[验证清单](verification/windows-results.json)。验证环境为 Windows Server 2025 x64 / Node 24.13.0，包含 21 项回归与 CMD 安装/启动/模拟身份服务检查；分发 ZIP 的 SHA256 与该运行核对一致。用户 Windows 桌面和真实 Binance 配对仍需分别验收。

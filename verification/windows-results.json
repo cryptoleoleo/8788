@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "testedCommit": "32796bce164e16cf19a6f1ca1c548c9229754786",
+  "runUrl": "https://github.com/cryptoleoleo/8788/actions/runs/40534360538",
+  "runner": "Windows Server 2025 x64 (GitHub-hosted)",
+  "node": "24.13.0",
+  "package": "BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip",
+  "packageSha256": "618171b1f84caf2a69d23cbe77ee4d2497fd7728ba41cae2da42f4495a2db73b",
+  "unitTestsPassed": 21,
+  "checks": [
+    "Windows ZIP extraction and checksum",
+    "CMD installer and launcher",
+    "Chinese, spaced and ampersand paths",
+    "Node lookup through PATH",
+    "HTTP service and Debot parser asset",
+    "independent BSC identity context and file URL bootstrap",
+    "program backup, configuration preservation, busy port and unrelated-folder protection"
+  ],
+  "walletAccess": "Fake CLI and synthetic addresses only. No real wallet credentials or transactions.",
+  "notVerified": [
+    "Real Binance identity pairing",
+    "Real trades/copy trades",
+    "Consumer Windows desktop interaction",
+    "Original Chrome extension loading"
+  ]
+}
