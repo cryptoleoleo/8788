@@ -1,0 +1,20 @@
+﻿import * as P from './protocol.js';
+const TOKEN='0xd270d4e1ec6e6e0d28c0ecb8be966ec75997ffff';
+const fm = await P.fourMemeInfo(TOKEN);
+console.log('router   :', fm.router);
+console.log('token    :', TOKEN);
+console.log('quote    :', fm.quote, '| isNative =', fm.quote.toLowerCase() === P.WBNB.toLowerCase());
+console.log('symbol   :', await P.erc20Symbol(TOKEN));
+console.log('quoteSym :', await P.erc20Symbol(fm.quote));
+console.log('status   :', fm.status, '| supply', P.formatUnits(fm.totalSupply,18), '| curve', P.formatUnits(fm.sold,18));
+const data = P.fourBuyData(TOKEN, 10n**18n, 0n);
+console.log('\nbuy calldata:', data);
+console.log('selector   :', data.slice(0,10), '(0x995ee6da = buy)');
+// 桥模拟（value=0，ERC20 计价）
+const BASE='http://127.0.0.1:8787';
+const html = await (await fetch(BASE+'/')).text();
+const t = html.match(/const BRIDGE_TOKEN = '([0-9a-f]+)'/)[1];
+const j = await (await fetch(BASE+'/api/send',{method:'POST',headers:{'content-type':'application/json','x-bridge-token':t},body:JSON.stringify({to:P.FOUR_ROUTER,data,value:'0',previewOnly:true})})).json();
+console.log('\nbridge preview ok :', j.ok);
+console.log('stage             :', j.stage || 'preview');
+console.log('error             :', JSON.stringify(j.error).slice(0,160));

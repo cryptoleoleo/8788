@@ -1,0 +1,17 @@
+import * as P from './protocol.js';
+const W='0x0000000000000000000000000000000000000000';
+const TOKEN='0x7E200C5E723F84edbCf5Cd8D76A0dbF2A8127777';
+const info = await P.resolveToken(TOKEN, W);
+console.log('probe   :', info.probe);
+console.log('market  :', info.market);
+console.log('quote   :', info.quote, '| native =', info.native, '| symbol =', await P.erc20Symbol(info.quote));
+const st = await P.readStatus(info.probe, W);
+console.log('PHASE   :', st.status.PHASE, '| BUY_OK', st.status.BUY_OK, '| SELL_OK', st.pos.SELL_OK);
+const gross = P.parseUnitsStrict('0.01', 18);
+const fund = await P.readFunding(info.probe, gross, W);
+console.log('funding : BALANCE_OK', fund.BALANCE_OK, '| ALLOWANCE_OK', fund.ALLOWANCE_OK);
+const plan = await P.planBuy(info.probe, gross, 100, W);
+console.log('plan    : RULES_OK', plan.RULES_OK, '| BUY_SHARES', P.formatUnits(plan.BUY_SHARES, 18), '| MIN', P.formatUnits(plan.MIN_SHARES, 18));
+const bal = await P.erc20Balance(info.quote, W);
+console.log('balance :', P.formatUnits(bal, 18), 'BNCB');
+console.log('data    :', P.buyData(info.market, gross, plan.MIN_SHARES));
