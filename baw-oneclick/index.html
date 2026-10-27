@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="./wallet-features.css" />
 <title>内盘一键买卖 · Agentic 钱包</title>
 <style>
   :root{
@@ -796,6 +797,8 @@
 
 <script type="module">
 import * as P from './protocol.js?v=14';
+import { installWalletFeatures } from './wallet-features.js';
+let multi = null;
 
 const BRIDGE_TOKEN = '__BRIDGE_TOKEN__';
 const $ = (s) => document.querySelector(s);
@@ -848,8 +851,9 @@ const kvCopy = (k, addr) => `<div class="kv"><div class="k">${esc(k)}</div><div 
 
 /* ---------- bridge ---------- */
 async function bridge(path, opts = {}) {
-  const res = await fetch(path, { ...opts, headers: { 'content-type': 'application/json', 'x-bridge-token': BRIDGE_TOKEN, ...(opts.headers || {}) } });
+  const res = await fetch(path, { ...opts, headers: { 'content-type': 'application/json', 'x-bridge-token': BRIDGE_TOKEN, ...multi?.requestHeaders(path), ...(opts.headers || {}) } });
   const j = await res.json().catch(() => ({ ok: false, error: 'HTTP ' + res.status }));
+  multi?.observe(path, j);
   if (!res.ok) {
     const e = j.error;
     throw new Error(typeof e === 'string' ? e : (e && (e.message || e.name)) || 'HTTP ' + res.status);
@@ -2555,7 +2559,8 @@ function setTradeSlip(bps) {
   renderTradeSettings();
 }
 
-async function uniBuy(amountArg, skip = quickTrade) {
+async function uniBuy(amountArg, skip = quickTrade, multiBypass = false) {
+  if (!multiBypass && multi?.handlesTrade()) return multi.buy(amountArg);
   if (!state.venue) throw new Error('先解析代币');
   const raw = String(amountArg ?? '').trim();
   if (!raw) throw new Error('填买入 BNB 数量');
@@ -2663,7 +2668,8 @@ async function sellPortalPhase3(pct, skip = false) {
   await dexSellGeneric(skip);
 }
 
-async function uniSell(pctArg, skip = quickTrade) {
+async function uniSell(pctArg, skip = quickTrade, multiBypass = false) {
+  if (!multiBypass && multi?.handlesTrade()) return multi.sell(pctArg);
   if (!state.venue) throw new Error('先解析代币');
   const pct = Number(pctArg);
   if (!Number.isInteger(pct) || pct < 1 || pct > 100) throw new Error('卖出比例需要 1–100 的整数');
@@ -3453,6 +3459,32 @@ $('#ca').addEventListener('change', () => localStorage.setItem('baw.ca', $('#ca'
 $('#buySlip').addEventListener('change', () => {
   localStorage.setItem('baw.slip', $('#buySlip').value);
   $('#sellSlip').value = $('#buySlip').value;
+});
+multi = installWalletFeatures({
+  bridge, state, P, connect, resolve, log, short, refreshBalances,
+  buy: (value) => uniBuy(value, true, true), sell: (value) => uniSell(value, true, true),
+  preview: async (kind, value) => {
+    if (kind === 'buy' && state.venue === 'dex') { $('#dexBuyCa').value = $('#ca').value.trim(); $('#dexBuyAmount').value = value; return quoteDexBuy(); }
+    if (kind === 'buy' && state.venue === 'gang') { $('#gangToken').value = $('#ca').value.trim(); $('#gangBnb').value = value; return quoteGangBuy(); }
+    if (kind === 'sell' && state.venue === 'dex') { $('#dexBuyCa').value = $('#ca').value.trim(); dexSellPct = Number(value); return quoteDexSellGeneric(); }
+    if (kind === 'sell' && state.venue === 'gang') {
+      const q = await bridge('/api/gang/sell/quote', { method: 'POST', body: JSON.stringify({ token: $('#ca').value.trim(), pct: Number(value), ...tradeOptions() }) });
+      if (!q.ok) throw new Error(q.error || 'Gang 卖出报价失败');
+      log(`Gang 卖出预演：${q.tokensIn} ${q.symbol} → ${q.gangOut} ${q.quote || 'GANG'}（仅报价，未签名）`);
+      return q;
+    }
+    return kind === 'buy' ? uniBuy(value, true, true) : uniSell(value, true, true);
+  },
+  restoreDisplay: () => {
+    setPill($('#walletPill'), state.account ? short(state.account) : '未连接', state.account ? 'on' : '');
+    setPill($('#sessionPill'), 'session ' + (state.session || '-'), state.session === 'CONNECTED' ? 'on' : '');
+    setPill($('#chainPill'), state.account ? 'chain 56' : 'chain -', state.account ? 'on' : '');
+    if (state.bal) renderBalances(); else if ($('#balBox')) $('#balBox').innerHTML = '';
+    if (!state.account) $('#unifiedTradePanel').style.display = 'none';
+  },
+  getOptions: () => ({ dryRun: $('#dryRun').checked, slipBps: tradeSlipBps, gasLevel: tradeGasLevel, mev: tradeMev }),
+  setOptions: ({ dryRun, slipBps }) => { $('#dryRun').checked = dryRun; tradeSlipBps = slipBps; renderTradeSettings(); syncMode(); },
+  pausePolling: () => { clearInterval(pollTimer); pollTimer = null; }, resumePolling: () => { if (state.account) startPolling(); },
 });
 </script>
 </body>

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "programFiles": 1898,
+  "checks": [
+    "native install into path with spaces; exact file hash match",
+    "refuses unrelated existing directory",
+    "busy-port install leaves old files unchanged",
+    "busy-port launch exits before wallet CLI access",
+    "upgrade backs up old installation",
+    "universal arm64/x86_64 compiled; executed on arm64 only"
+  ],
+  "walletAccess": "No real CLI, wallet data, browser profile, or chain access"
+}

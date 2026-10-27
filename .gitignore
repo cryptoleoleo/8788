@@ -3,3 +3,4 @@ data/
 *.log
 *.pid
 .DS_Store
+verification/package-stage.json

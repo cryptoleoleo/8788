@@ -9,7 +9,7 @@ if ! baw_find_node; then
   exit 1
 fi
 export PATH="${BAW_RUNTIME_NODE:h}:$PATH"
-# Optional external launch settings. The original application remains untouched.
+# Optional external launch settings. Keep the original port unless explicitly configured.
 if [[ -f "$BAW_ROOT/mac-options.json" ]]; then
   BAW_OPTIONS="$BAW_ROOT/mac-options.json"
   BAW_PORT=$("$BAW_RUNTIME_NODE" -e 'const fs=require("node:fs"); const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(c.port!==null && c.port!==undefined){if(!Number.isInteger(c.port)||c.port<1||c.port>65535)throw Error("端口必须为 1 至 65535 的整数或 null");process.stdout.write(String(c.port));}' "$BAW_OPTIONS")

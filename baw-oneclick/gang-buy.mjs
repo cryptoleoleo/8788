@@ -2,6 +2,7 @@
 // LaunchpadV2.buy(token, quoteIn, minTokensOut). Never retries automatically.
 import { execFile } from 'node:child_process';
 import { Interface, parseEther, parseUnits, formatUnits } from 'ethers';
+import { walletRuntime } from './multi-service.mjs';
 
 const PAD = '0x1B8F3f69DFa0a7F63d308C7EB0Fd38D8b099966E';
 const GANG = '0x0c6302401aa5325C2E36F170f52C00B1d220B405';
@@ -89,6 +90,7 @@ function gangOrderOpts(body = {}) {
 }
 
 function runBaw(args, timeout = 120000) {
+  if (walletRuntime.current()) return walletRuntime.run(args, timeout);
   const spec = bawSpec();
   return new Promise((resolve) => {
     execFile(spec.file, [...spec.args, ...args], { timeout, maxBuffer: 8 * 1024 * 1024, windowsHide: true }, (err, stdout, stderr) => {
@@ -125,6 +127,7 @@ async function call(to, iface, fn, args = []) {
 }
 
 async function getWallet() {
+  if (walletRuntime.current()) return walletRuntime.address();
   if (walletCache) return walletCache;
   const out = await runBaw(['wallet', 'address', '--json'], 60000);
   if (!out.json || !out.json.success) throw new Error('读不到 Agentic 钱包地址');

@@ -1,0 +1,52 @@
+改动范围
+
+原始输入：baw-oneclick-8788-autocafast-20261027-123507.zip
+SHA256: 14023baa4916e8f0be6e340f9c67eec4c6d3166abaa2ce3510349874be746594
+原 ZIP 1884 个程序文件，其中 1881 个文件与输入逐字节相同。
+
+原文件仅以下 3 个增加接入：
+index.html：引入新增 UI 模块与样式；统一买卖入口支持分组分发；提供预演和页面恢复回调。
+serve.mjs：注册新 API、按请求隔离钱包上下文、独立钱包盈亏缓存、检查上下文访问权限。
+gang-buy.mjs：钱包地址和 CLI 调用接入当前独立身份，其余业务函数保持原文。
+
+新增模块：
+multi-store.mjs：分组、身份公开信息、任务元数据和精确金额验证。
+wallet-runtime.mjs：身份隔离、配对、逐身份串行调用、签名前核对地址、预演禁止执行。
+profile-bootstrap.mjs / profile-keytar.mjs：CLI 1.11.0 的独立钥匙串命名空间适配。
+multi-service.mjs：新增元数据/配对/跟单接口，沿用原本桥接 token。
+copy-feed.mjs：参考 gang-copytrade.zip 的买入事件订阅及解码；去重、冷却、单次领取、
+离线停止、过期信号丢弃。交易执行仍交给原前端函数。
+wallet-features.js / .css：原页面内“交易 / 跟单 / 钱包”页签、分组选择、确认及结果。
+
+Mac 外围：Node 最低 24；沿用 BAW_CLI / BAW_NODE 和系统 HTTP/HTTPS 代理适配。
+新增启动端口检查，保留默认 8787，不自动结束原进程。
+Swift 安装器使用独立目录和专属标记，复制前校验、同版本覆盖前备份。
+安装器同时包含 arm64 / x86_64；Intel 分支已交叉编译，未在 Intel 机器运行。
+Binance CLI / Node 不内嵌，由朋友在自己的 Mac 安装对应版本并配对自己的身份。
+
+保留原行为的回归证据：
+original-integrity.test.mjs 核对 1881 个文件 SHA256。
+同时逐字比较原 onBuy、onBuyWithBnb、onSell、fmBuy、fmSell、dexBuy、dexSellGeneric、
+buyGang、gangSell、prepareBuyForGross、executeSell、bridgeSend 函数和默认买卖档位。
+protocol.js、preset-watch.mjs、preset-autobuy.mjs、依赖未修改。
+
+验证层级：
+代码检查：新增/修改 JS 的语法检查、git diff --check、13 项 Node 测试通过。
+服务可用（测试环境）：增强版真实 HTTP 服务配合虚拟 CLI，在临时端口响应；
+API 鉴权、独立身份地址、预演禁止提交、去重、停止、过期、状态恢复通过。
+Chrome 页面验证：临时新建测试 profile；320/430/900 宽度、分组管理、保存不启动、
+逐钱包执行、失败不自动重试通过。没有读取现有 Chrome 用户资料。
+原页面集成：实际 connect/resolve/uniBuy/dexBuy 回调在模拟网络下通过；
+每钱包金额和请求头正确，预演只报价，批次结束恢复原身份显示。
+Mac 安装器：两个架构编译，本机 arm64 验证复制、端口占用保护、拒绝覆盖无标记目录。
+真实身份配对/真实交易/真实链上跟单：未执行、未验证。
+原 Chrome 侧边栏扩展加载：未验证，因缺少真正的原扩展文件，无法声明成功。
+
+测试复现
+将本目录 tests/ 和 original-sha256.json 放到安装目录的同级结构中，然后执行：
+node --test tests/*.test.mjs
+页面测试还需要开发环境的 Playwright，以及 /Applications/Google Chrome.app。
+node tests/browser.mjs
+node tests/original-page.mjs
+浏览器测试自行建立临时服务与虚拟 CLI；不调用你的真实钱包。
+本包不自动运行原包附带的 smoke/native-cycle 等脚本。

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "checks": [
+    "actual original connect/resolve/uniBuy/dexBuy callbacks",
+    "preview quotes only",
+    "per-wallet headers and amounts",
+    "original wallet display restored"
+  ],
+  "network": "All blockchain and trade responses mocked; no signing"
+}

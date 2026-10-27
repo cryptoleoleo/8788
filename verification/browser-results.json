@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "original DOM preserved",
+    "group creation/move",
+    "task save does not start",
+    "320/430/900 responsive",
+    "no external network",
+    "sequential identities",
+    "preview submission guard",
+    "partial failure no retry"
+  ],
+  "wallets": "synthetic fixtures only"
+}

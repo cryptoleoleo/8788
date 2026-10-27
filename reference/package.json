@@ -1,0 +1,21 @@
+{
+  "name": "gang-copytrade",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node copytrade.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "viem": "^2.57.12",
+    "ws": "^8.22.0"
+  },
+  "bin": {
+    "copytrade": "./copytrade.js"
+  }
+}

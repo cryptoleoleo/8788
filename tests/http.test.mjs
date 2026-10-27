@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { startFixture } from './server-fixture.mjs';
+test('original service serves integrated UI; new APIs authenticate and isolate mock identities',async t=>{
+ const f=await startFixture();t.after(()=>f.close());
+ const api=async(path,body,headers={})=>{const r=await fetch(f.url+path,{method:body===undefined?'GET':'POST',headers:{'x-bridge-token':'test-only-token','content-type':'application/json',...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});return {status:r.status,data:await r.json()};};
+ const page=await (await fetch(f.url+'/')).text();assert.match(page,/installWalletFeatures/);assert.match(page,/id="btnTwQuick"/);assert.doesNotMatch(page,/chrome-extension|<iframe/);
+ assert.equal((await api('/api/multi/state',undefined,{'x-bridge-token':'bad'})).status,401);
+ const before=(await api('/api/multi/state')).data;assert.equal(before.wallets[0].status,'UNCHECKED');assert.equal(before.copy.running.length,0);
+ const original=(await api('/api/multi/wallets/check',{id:'original'})).data;assert.equal(original.status,'CONNECTED');
+ const group=(await api('/api/multi/groups/create',{name:'试单组'})).data.group;
+ const w=(await api('/api/multi/wallets/create',{name:'wallet2',groupId:group.id})).data.wallet;
+ const checked=(await api('/api/multi/wallets/check',{id:w.id})).data;assert.equal(checked.status,'CONNECTED');assert.notEqual(checked.address,original.address);
+ const scoped=(await api('/api/health',undefined,{'x-baw-wallet':w.id})).data;assert.equal(scoped.wallet,checked.address);
+ const legacy=(await api('/api/health')).data;assert.equal(legacy.wallet,original.address);
+ assert.equal((await api('/api/health',undefined,{'x-baw-wallet':w.id,'x-bridge-token':'bad'})).status,401);
+ assert.equal((await api('/api/health',undefined,{'x-baw-wallet':'../escape'})).status,400);
+ assert.equal((await api('/api/preset-autobuy/arm',{}, {'x-baw-wallet':w.id})).status,400);
+ assert.equal((await api('/api/send-key',{}, {'x-baw-wallet':w.id})).status,400);
+ assert.equal((await api('/api/health',undefined,{'x-baw-copy-job':'j_fake'})).status,400);
+ const result=await api('/api/multi/tasks/save',{name:'只保存不启动',walletIds:[w.id],leaders:['0x'+'1'.repeat(40)],venues:['four'],amount:'0.05',mode:'fixed',minLeader:'0',cooldown:60,slippage:1,dryRun:true});
+ assert.equal(result.data.ok,true);assert.equal((await api('/api/multi/state')).data.copy.running.length,0);
+ assert.equal((await fetch(f.url+'/wallet-features.css')).status,200);
+});

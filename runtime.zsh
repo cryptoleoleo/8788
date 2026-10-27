@@ -17,7 +17,7 @@ baw_select_node() {
     baw_version=$("$baw_candidate" --version 2>/dev/null) || continue
     [[ "$baw_version" == v<->.* ]] || continue
     baw_major="${${baw_version#v}%%.*}"
-    if (( baw_major >= 22 )); then
+    if (( baw_major >= 24 )); then
       BAW_RUNTIME_NODE="$baw_candidate"
       return 0
     fi

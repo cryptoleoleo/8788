@@ -16,6 +16,7 @@ import { randomBytes } from 'node:crypto';
 import { presetWatch } from './preset-watch.mjs';
 import { presetAutoBuyer } from './preset-autobuy.mjs';
 import { detectGang, quoteGang, buyGang, quoteGangSell, sellGang, gangBusy } from './gang-buy.mjs';
+import { walletRuntime, multiApi, requestWalletScope, copyFeed } from './multi-service.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -114,6 +115,7 @@ function bawSpec() {
 }
 
 function runBaw(args, timeout = 180000) {
+  if (walletRuntime.current()) return walletRuntime.run(args, timeout);
   const spec = bawSpec();
   return new Promise((resolve) => {
     execFile(spec.file, [...spec.args, ...args], { timeout, maxBuffer: 16 * 1024 * 1024, windowsHide: true }, (err, stdout, stderr) => {
@@ -127,6 +129,7 @@ function runBaw(args, timeout = 180000) {
 
 let walletCache = null;
 async function getWallet() {
+  if (walletRuntime.current()) return walletRuntime.address();
   if (walletCache) return walletCache;
   const { json } = await runBaw(['wallet', 'address', '--json'], 60000);
   if (!json || !json.success) throw new Error('读不到 Agentic 钱包地址：' + JSON.stringify(json));
@@ -962,7 +965,8 @@ async function apiTokenPnl(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const ca = String(url.searchParams.get('ca') || '').toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(ca)) return json(res, 400, { ok: false, error: 'bad ca' });
-  const hit = tokenPnlCache.get(ca);
+  const cacheKey = walletRuntime.current() ? `${walletRuntime.current().id}:${ca}` : ca;
+  const hit = tokenPnlCache.get(cacheKey);
   const fresh = url.searchParams.get('fresh') === '1';
   if (!fresh && hit && Date.now() - hit.ts < 10000) return json(res, 200, hit.data);
 
@@ -1101,7 +1105,7 @@ async function apiTokenPnl(req, res) {
     note: '基于 BAW 钱包最近 100 笔交易历史；总利润为已实现利润，未计未实现和 gas',
     ts: Date.now(),
   };
-  tokenPnlCache.set(ca, { ts: Date.now(), data });
+  tokenPnlCache.set(cacheKey, { ts: Date.now(), data });
   if (tokenPnlCache.size > 100) tokenPnlCache.delete(tokenPnlCache.keys().next().value);
   json(res, 200, data);
 }
@@ -1365,7 +1369,7 @@ async function apiAddr(req, res) {
   }
 }
 /* ---------------- server ---------------- */
-createServer(async (req, res) => {
+async function handleRequest(req, res) {
   try {
     const url = new URL(req.url, 'http://localhost');
 
@@ -1373,6 +1377,7 @@ createServer(async (req, res) => {
 
     if (url.pathname.startsWith('/api/')) {
       if (req.headers['x-bridge-token'] !== TOKEN) return json(res, 401, { ok: false, error: 'bad token' });
+      if (url.pathname.startsWith('/api/multi/')) return await multiApi(req, res, url.pathname, readBody, json);
       if (url.pathname === '/api/token-overview' && req.method === 'GET') return await apiTokenOverview(req, res);
       if (url.pathname === '/api/token-pnl' && req.method === 'GET') return await apiTokenPnl(req, res);
       if (url.pathname === '/api/swap/quote' && req.method === 'POST') return await apiSwapQuote(req, res);
@@ -1446,8 +1451,21 @@ createServer(async (req, res) => {
   } catch (e) {
     try { json(res, 500, { ok: false, error: e.message }); } catch { res.end('error'); }
   }
+}
+createServer((req, res) => {
+  // Scoped identity selection is authenticated, including /api/health. The legacy path is unchanged.
+  if ((req.headers['x-baw-wallet'] || req.headers['x-baw-copy-job'] || req.headers['x-baw-preview-only']) && req.headers['x-bridge-token'] !== TOKEN) {
+    return json(res, 401, { ok: false, error: 'bad token' });
+  }
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  if (req.headers['x-baw-wallet'] && (pathname.startsWith('/api/preset-') || ['/api/send-key', '/api/addr'].includes(pathname))) {
+    return json(res, 400, { ok: false, error: '此原版功能只使用原有身份，不接受多钱包上下文' });
+  }
+  Promise.resolve().then(() => requestWalletScope(req, () => handleRequest(req, res)))
+    .catch(e => { if (!res.headersSent) json(res, 400, { ok: false, error: e.message }); else res.end(); });
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`内盘一键买卖（Agentic 钱包签名）→ http://127.0.0.1:${PORT}`);
   console.log(`CLI: ${CLI}`);
   console.log(`BNB 自动换汇白名单: ${[...KNOWN_QUOTES.values()].join(', ')}`);
 });
+process.once('exit', () => copyFeed.close());

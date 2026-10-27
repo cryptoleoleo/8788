@@ -1,0 +1,3459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>内盘一键买卖 · Agentic 钱包</title>
+<style>
+  :root{
+    --bg:#080b11; --bg2:#0d131c; --card:#111823; --card2:#0b1119; --line:#1e2a3a;
+    --fg:#e8eef7; --dim:#8598ad; --dim2:#5d7086;
+    --buy:#22c55e; --buy2:#15803d; --sell:#ef4444; --sell2:#991b1b;
+    --acc:#f0b90b; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --r:14px; --r2:10px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 15% -10%, #12203a 0%, transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, #1a1408 0%, transparent 55%),
+      var(--bg);
+    color:var(--fg);
+    font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 80px}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:14px 0;margin-bottom:18px;background:rgba(8,11,17,.82);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:16px;letter-spacing:.2px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+  .tag{font-size:11px;font-weight:600;color:#0b0f16;background:var(--acc);border-radius:999px;padding:2px 8px}
+  .meta{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap}
+  #topAdvanced{display:none;align-items:center;gap:6px;flex-wrap:wrap}
+  #topAdvanced.open{display:flex}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;
+    padding:5px 11px;font-size:12px;color:var(--dim);background:var(--card2);white-space:nowrap
+  }
+  .pill.on{border-color:#14532d;color:var(--ok)}
+  .pill.warn{border-color:#a16207;color:var(--warn)}
+  .pill.off{border-color:#7f1d1d;color:var(--bad)}
+  .pill i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+
+  .btn{
+    appearance:none;border:1px solid var(--line);background:#172130;color:var(--fg);
+    border-radius:var(--r2);padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;
+    transition:.15s border-color,.15s background,.15s transform;
+  }
+  .btn:hover:not(:disabled){border-color:#31445c;background:#1c2837}
+  .btn:active:not(:disabled){transform:translateY(1px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.sm{padding:6px 11px;font-size:12px;border-radius:9px}
+  .btn.ghost{background:transparent}
+  .btn.primary{background:linear-gradient(180deg,#f0b90b,#d9a600);color:#0b0f16;border-color:#d9a600}
+  .btn.primary:hover:not(:disabled){background:linear-gradient(180deg,#ffc91e,#e0ad00)}
+  .btn.buy{background:linear-gradient(180deg,#22c55e,#15803d);border-color:#15803d;color:#04140a}
+  .btn.buy:hover:not(:disabled){background:linear-gradient(180deg,#2ee06a,#17913f)}
+  .btn.sell{background:linear-gradient(180deg,#ef4444,#991b1b);border-color:#991b1b;color:#fff}
+  .btn.sell:hover:not(:disabled){background:linear-gradient(180deg,#ff5a5a,#a71f1f)}
+  .btn.block{width:100%;padding:14px;font-size:15px}
+  .btn.buy.dry{background:linear-gradient(180deg,#1d5236,#123c25);border-color:#1d5236;color:#a7d9bd}
+  .btn.sell.dry{background:linear-gradient(180deg,#5a2323,#3c1717);border-color:#5a2323;color:#e7b4b4}
+
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02) inset,0 10px 30px rgba(0,0,0,.25);
+  }
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .card-head h2{font-size:13px;margin:0;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);font-weight:700;display:flex;align-items:center;gap:9px}
+  .card-head .num{
+    width:20px;height:20px;border-radius:6px;background:#1c2634;color:var(--dim);
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700
+  }
+  .card-head .right{margin-left:auto;display:flex;gap:8px}
+
+  label{display:block;color:var(--dim);font-size:12px;margin-bottom:6px}
+  input[type=text],input[type=number]{
+    width:100%;background:#070c13;border:1px solid var(--line);border-radius:var(--r2);
+    color:var(--fg);padding:12px 13px;font:inherit;font-variant-numeric:tabular-nums;
+    transition:.15s border-color,.15s box-shadow;
+  }
+  input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(240,185,11,.1)}
+  input::placeholder{color:var(--dim2)}
+  .input-row{display:flex;gap:10px;flex-wrap:wrap}
+  .input-row input{flex:1;min-width:260px}
+  .split{display:grid;grid-template-columns:1fr 110px;gap:10px}
+  @media(max-width:620px){.split{grid-template-columns:1fr}}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+  .kv{background:#070c13;border:1px solid var(--line);border-radius:var(--r2);padding:12px 13px}
+  .kv .k{color:var(--dim);font-size:11px;letter-spacing:.03em;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+  .kv .v{font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;word-break:break-all;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .kv .v small{font-weight:400;color:var(--dim);font-size:11px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+  .copy{border:1px solid var(--line);background:#0f1722;color:var(--dim);border-radius:6px;
+    font-size:10px;padding:2px 6px;cursor:pointer;flex:none}
+  .copy:hover{color:var(--fg);border-color:#31445c}
+
+  .progress{height:8px;border-radius:999px;background:#0a1017;border:1px solid var(--line);overflow:hidden;margin-top:14px}
+  .progress > div{height:100%;width:0;background:linear-gradient(90deg,#f0b90b,#f59e0b);transition:width .4s}
+  .pool-line{display:flex;justify-content:space-between;color:var(--dim);font-size:11px;margin-top:7px}
+
+  .tabs{display:flex;gap:8px;background:#070c13;border:1px solid var(--line);border-radius:12px;padding:5px;margin-bottom:16px;width:fit-content}
+  .tab{border:0;background:transparent;color:var(--dim);padding:8px 22px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;transition:.15s}
+  .tab.active{background:#1a2432;color:var(--fg)}
+  .tab.active.buy{color:#4ade80}
+  .tab.active.sell{color:#f87171}
+  #unifiedResolveHost .card,.uni-pane > .card{border:0;background:transparent;padding:0;margin:0;box-shadow:none}
+  #unifiedResolveHost .card .card-head,.uni-pane > .card .card-head{margin-top:0}
+  #unifiedResolveHost{margin-top:4px}
+  .uni-pane > .card .fm-sec{margin-top:14px}
+  .ov-card{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008))}
+  .ov-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+  .ov-id{min-width:0}
+  .ov-sym{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .ov-sym b{font-size:20px;letter-spacing:.01em}
+  .ov-name{color:var(--muted);font-size:12px;font-weight:500}
+  .ov-sub{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--muted);font-size:11px;flex-wrap:wrap}
+  .ov-launch{padding:2px 7px;border-radius:999px;background:rgba(250,204,21,.12);color:#facc15;border:1px solid rgba(250,204,21,.25)}
+  .ov-quote{text-align:right;flex:0 0 auto}
+  .ov-price{font-size:23px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+  .ov-chg{font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
+  .ov-chg.up{color:var(--ok)} .ov-chg.down{color:var(--bad)}
+  .ov-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+  .ov-cell{padding:8px 9px;border:1px solid rgba(255,255,255,.06);border-radius:9px;background:rgba(0,0,0,.16);min-width:0}
+  .ov-cell span{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}
+  .ov-cell b{display:block;font-size:12px;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ov-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .ov-badge{font-size:10px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .ov-badge.good{color:var(--ok);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+  .ov-badge.bad{color:var(--bad);border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+  .ov-badge.warn{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+  .ov-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px}
+  .ov-links a{color:var(--accent);text-decoration:none;border-bottom:1px dotted rgba(250,204,21,.35)}
+  .ov-note{margin-top:8px;color:var(--muted);font-size:10px}
+  .ov-toggle{margin-top:8px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:4px 8px;font:inherit;font-size:10px;cursor:pointer}
+  .ov-toggle:hover{color:var(--accent);border-color:rgba(250,204,21,.45)}
+  .fm-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .fm-quick button{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);padding:8px 0;font:inherit;font-size:11px;border-radius:7px;cursor:pointer;font-weight:700}
+  .fm-quick button:hover{color:var(--fg);border-color:rgba(250,204,21,.45)}
+  .fm-quick button.active{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.5);color:#facc15}
+  .uni-trade{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.12)}
+  .uni-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .uni-token-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .uni-token-line b{font-size:18px;letter-spacing:.01em}
+  .uni-route{font-size:10px;color:var(--accent);border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.08);border-radius:999px;padding:2px 8px}
+  .uni-quote-line{display:flex;align-items:baseline;gap:6px;color:var(--muted);font-size:11px}
+  .uni-quote-line b{color:var(--fg);font-size:14px}
+  .uni-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .uni-buttons .btn{margin-top:0}
+  .uni-legacy{display:none!important}
+  .tw{padding:0;border:1px solid var(--line);border-radius:12px;background:#0d1016;overflow:hidden}
+  .tw-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:#0b0e14;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tw-token{display:flex;align-items:center;gap:8px;min-width:0}
+  .tw-token b{font-size:16px}
+  .tw-meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px;flex-wrap:wrap}
+  .tw-meta b{color:var(--fg);font-size:11px;margin-right:4px}
+  .tw-position{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:8px 12px;background:#0a0e14;border-bottom:1px solid var(--line)}
+  .tw-position div{min-width:0}
+  .tw-position span{display:block;color:var(--muted);font-size:9px}
+  .tw-position b{display:block;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tw-position b.up{color:var(--ok)} .tw-position b.down{color:var(--bad)}
+  .tw-settings{display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0a0e14;flex-wrap:wrap}
+  .tw-set-group{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:9px}
+  .tw-chip{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:5px;padding:3px 6px;font:inherit;font-size:9px;cursor:pointer}
+  .tw-chip.active{border-color:rgba(250,204,21,.55);color:var(--accent);background:rgba(250,204,21,.08)}
+  .tw-set-group input{width:64px;padding:3px 5px;font-size:9px;border-radius:5px}
+  .tw-set-group select{background:#080b10;border:1px solid var(--line);color:var(--fg);border-radius:5px;padding:3px 5px;font:inherit;font-size:9px;outline:none}
+  .tw-mev{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:9px;margin:0;cursor:pointer}
+  .tw-mev input{width:auto;margin:0}
+  .tw-edit{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);border-radius:6px;padding:4px 8px;font:inherit;font-size:10px;cursor:pointer}
+  .tw-edit:hover{color:var(--accent);border-color:rgba(250,204,21,.45)}
+  .tw-quick{border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#f87171;border-radius:6px;padding:4px 8px;font:inherit;font-size:10px;cursor:pointer}
+  .tw-quick.on{border-color:rgba(239,68,68,.7);background:rgba(239,68,68,.16);color:#fca5a5}
+  .tw-section{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .tw-sec-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .tw-label{font-size:13px;font-weight:800}
+  .tw-buy .tw-label{color:#4ade80}
+  .tw-sell .tw-label{color:#f87171}
+  .tw-hintline{color:var(--muted);font-size:9px}
+  .tw-wallet{margin-left:auto;color:var(--muted);font-size:10px}
+  .tw-wallet b{color:var(--fg);font-size:11px;margin-left:3px}
+  .tw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .tw-btn{height:36px;border-radius:7px;background:rgba(0,0,0,.12);font:inherit;font-size:12px;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+  .tw-btn.buy{border:1px solid rgba(34,197,94,.42);color:#4ade80}
+  .tw-btn.buy:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.75)}
+  .tw-btn.sell{border:1px solid rgba(239,68,68,.42);color:#f87171}
+  .tw-btn.sell:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.75)}
+  .tw-btn:disabled{opacity:.35;cursor:not-allowed}
+  .tw-foot{display:flex;align-items:center;gap:12px;margin-top:8px;color:var(--muted);font-size:9px;flex-wrap:wrap}
+  .tw-foot > span:not(.tw-spacer){display:none}
+  .tw-foot b{color:var(--fg);font-weight:600}
+  .tw-spacer{flex:1}
+  .tw-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 12px;background:#0b0e14}
+  .tw-stats div{min-width:0}
+  .tw-stats span{display:block;color:var(--muted);font-size:9px}
+  .tw-stats b{display:block;font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tw-stats b.up{color:var(--ok)}
+  .tw-stats b.down{color:var(--bad)}
+  .tw-note{padding:0 12px 9px;background:#0b0e14;color:var(--muted);font-size:9px}
+  .tw-edit-panel{padding:12px;border-top:1px solid var(--line);background:rgba(250,204,21,.025)}
+  .tw-edit-title{color:var(--muted);font-size:10px;margin:8px 0 6px}
+  .tw-edit-title:first-child{margin-top:0}
+  .tw-edit-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+  .tw-edit-grid input,.tw-custom input{width:100%;min-width:0;background:#080b10;border:1px solid var(--line);border-radius:6px;color:var(--fg);padding:7px 6px;font:inherit;font-size:11px;outline:none}
+  .tw-edit-grid input:focus,.tw-custom input:focus{border-color:rgba(250,204,21,.5)}
+  .tw-edit-actions{display:flex;gap:8px;margin-top:10px}
+  .tw-custom{display:grid;grid-template-columns:1fr auto 1fr auto;gap:7px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .tw-custom .btn{padding:7px 10px;font-size:11px;margin:0}
+  @media(max-width:720px){.ov-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ov-price{font-size:19px}.uni-buttons{grid-template-columns:1fr}.tw-edit-grid{grid-template-columns:repeat(4,1fr)}.tw-custom{grid-template-columns:1fr auto}.tw-stats{grid-template-columns:repeat(2,1fr)}.tw-position{grid-template-columns:repeat(2,1fr)}}
+
+  .quick{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#0f1722;color:var(--dim);border-radius:8px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer}
+  .chip:hover{color:var(--fg);border-color:#31445c}
+  .sum{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 0;padding:12px 14px;border-radius:var(--r2);
+    background:#070c13;border:1px dashed var(--line);font-size:12px;color:var(--dim)}
+  .sum b{color:var(--fg);font-variant-numeric:tabular-nums}
+  .sum .ok{color:var(--ok)} .sum .bad{color:var(--bad)}
+
+  .pay-modes{display:flex;gap:6px;background:#070c13;border:1px solid var(--line);border-radius:12px;padding:5px;margin-bottom:13px;width:fit-content;max-width:100%;flex-wrap:wrap}
+  .pay-mode{border:0;background:transparent;color:var(--dim);padding:8px 14px;border-radius:8px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+  .pay-mode:hover:not(:disabled){color:var(--fg)}
+  .pay-mode.active{background:#1a2432;color:var(--acc)}
+  .pay-mode:disabled{opacity:.45;cursor:not-allowed}
+  .swap-box{background:#070c13;border:1px solid var(--line);border-radius:var(--r2);padding:11px 13px;margin-bottom:12px}
+  .swap-line{display:flex;justify-content:space-between;gap:10px;color:var(--dim);font-size:12px}
+  .swap-line b{color:var(--fg);font-weight:600}
+  .swap-est{margin-top:5px;color:var(--fg);font-size:13px;font-variant-numeric:tabular-nums}
+  .swap-est b{color:var(--acc)}
+  .swap-est .bad{color:var(--bad)}
+  .watch-events{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:360px;overflow:auto}
+  .watch-event{background:#070c13;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .watch-event .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+  .watch-event .top b{color:var(--acc)}
+  .watch-event .meta{color:var(--dim);font-size:11px;margin-top:4px;word-break:break-all}
+  .watch-event .meta .mono{color:var(--fg)}
+  .watch-event .ok{color:var(--ok)} .watch-event .bad{color:var(--bad)} .watch-event .warn{color:var(--warn)}
+
+  .banner{display:none;border:1px solid #a16207;background:linear-gradient(180deg,#3a2a05,#2a1f05);
+    color:#fde68a;border-radius:var(--r2);padding:11px 14px;margin-bottom:14px;font-size:13px}
+  .banner.show{display:block}
+  #log{background:#05080d;border:1px solid var(--line);border-radius:var(--r2);padding:12px;
+    height:230px;overflow:auto;font:12px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+  #log .t{color:var(--dim2)}
+  #log .ok{color:var(--ok)} #log .bad{color:var(--bad)} #log .warn{color:var(--warn)}
+  .hint{color:var(--dim2);font-size:11px;margin-top:8px;line-height:1.6}
+  a{color:var(--acc);text-decoration:none} a:hover{text-decoration:underline}
+
+  /* 简洁布局：交易优先，监听收到底部并折叠 */
+  .wrap{max-width:940px;padding:0 14px 48px}
+  .topbar{padding:10px 0;margin-bottom:10px}
+  .brand{font-size:15px}
+  .card{padding:14px;margin-bottom:12px;border-radius:12px}
+  .card-head{margin-bottom:10px}
+  .card-head .right{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .banner{margin-bottom:10px;padding:9px 12px;font-size:12px}
+  #unifiedTradeCard{padding-bottom:12px}
+  #unifiedTradeCard > .card-head{display:none}
+  .ov-card{margin-top:10px;padding:12px}
+  .ov-grid{gap:7px;margin-top:9px}
+  #log{height:170px;padding:10px 12px}
+  .footer-note{margin-top:14px;font-size:10px}
+  .watch-card{padding:12px 14px;margin-bottom:8px;background:linear-gradient(180deg,#0e141d,#0b1017)}
+  .watch-card .card-head{margin-bottom:0}
+  .watch-card .card-head h2{font-size:11px;letter-spacing:.06em}
+  .watch-card .card-head .right{gap:5px}
+  .watch-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .watch-body.open{display:block}
+  .watch-card .watch-events{max-height:220px}
+  .watch-card .hint{margin-top:6px}
+  @media(max-width:620px){
+    .topbar{gap:8px}
+    .meta{gap:5px}
+    .card{padding:12px}
+    .watch-card .card-head{align-items:flex-start}
+    .watch-card .card-head h2{font-size:10px}
+  }
+
+  dialog{border:1px solid var(--line);background:linear-gradient(180deg,#131b26,#0c1219);
+    color:var(--fg);border-radius:16px;padding:0;width:min(440px,92vw);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  dialog::backdrop{background:rgba(3,6,10,.7);backdrop-filter:blur(3px)}
+  .dlg-head{padding:18px 20px 0;font-size:16px;font-weight:700}
+  .dlg-body{padding:14px 20px 6px}
+  .dlg-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed #1a2432;font-size:13px}
+  .dlg-row:last-child{border-bottom:0}
+  .dlg-row span{color:var(--dim)}
+  .dlg-row b{font-variant-numeric:tabular-nums;text-align:right}
+  .dlg-foot{display:flex;gap:10px;padding:16px 20px 20px}
+  .dlg-foot .btn{flex:1}
+  .warnbox{margin:10px 20px 0;padding:10px 12px;border-radius:10px;background:#2a1a05;border:1px solid #713f12;color:#fcd34d;font-size:12px}
+
+  #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:#1a2432;border:1px solid #31445c;color:var(--fg);padding:10px 18px;border-radius:999px;
+    font-size:13px;transition:.25s;z-index:60}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--dim);font-size:12px;user-select:none}
+  .switch input{display:none}
+  .switch .track{width:38px;height:21px;border-radius:999px;background:#1e2a3a;border:1px solid var(--line);position:relative;transition:.2s}
+  .switch .track::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#63788f;transition:.2s}
+  .switch input:checked + .track{background:#3a2a05;border-color:#a16207}
+  .switch input:checked + .track::after{left:19px;background:var(--acc)}
+
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* ---------- flap 风格交易面板 ---------- */
+  .flap{background:#0a0c0a;border:1px solid #1f241f;border-radius:6px;padding:0;overflow:hidden}
+  .flap .fm-head{display:flex;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #1f241f}
+  .flap .fm-avatar{width:38px;height:38px;border-radius:4px;background:#141a12;border:1px solid #1f241f;
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#c8ff00;font-size:15px}
+  .flap .fm-sym{font-weight:800;font-size:16px;letter-spacing:.02em}
+  .flap .fm-sub{color:#6b7a6b;font-size:11px;margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .flap .fm-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 10px}
+  .flap .fm-tab{background:#111511;border:1px solid #232a23;color:#8a968a;padding:11px;font:inherit;font-weight:800;
+    font-size:14px;border-radius:4px;cursor:pointer;letter-spacing:.02em}
+  .flap .fm-tab.active{background:#16a34a;border-color:#16a34a;color:#fff}
+  .flap .fm-tab.active.sell{background:#dc2626;border-color:#dc2626}
+  .flap .fm-body{padding:0 16px 16px}
+  .flap .fm-balance{display:flex;justify-content:space-between;color:#7d887d;font-size:12px;margin:6px 0}
+  .flap .fm-balance b{color:#e8f0e8;font-variant-numeric:tabular-nums}
+  .flap .fm-input{display:flex;align-items:center;border:1px solid #232a23;background:#0e120e;border-radius:4px;padding:0 14px}
+  .flap .fm-input input{flex:1;background:transparent;border:0;color:#e8f0e8;font:inherit;font-size:22px;
+    font-weight:700;padding:14px 0;font-variant-numeric:tabular-nums;outline:none}
+  .flap .fm-input .unit{color:#8a968a;font-weight:800;font-size:13px;letter-spacing:.04em}
+  .flap .fm-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .flap .fm-quick button{background:#111511;border:1px solid #232a23;color:#8a968a;padding:8px 0;font:inherit;
+    font-size:12px;border-radius:4px;cursor:pointer;font-weight:700}
+  .flap .fm-quick button:hover{color:#c8ff00;border-color:#3a443a}
+  .flap .fm-dash{display:flex;align-items:center;gap:8px;color:#5f6b5f;font-size:10px;margin:14px 0 10px}
+  .flap .fm-dash::before,.flap .fm-dash::after{content:"";flex:1;border-top:1px dashed #232a23}
+  .flap .fm-cta{width:100%;padding:14px;border:0;border-radius:4px;font:inherit;font-weight:800;font-size:15px;
+    cursor:pointer;letter-spacing:.03em}
+  .flap .fm-cta.buy{background:#16a34a;color:#fff}
+  .flap .fm-cta.sell{background:#dc2626;color:#fff}
+  .flap .fm-cta:disabled{opacity:.35;cursor:not-allowed}
+  .flap .fm-recv{margin-top:10px;font-size:12px;color:#8a968a;display:flex;justify-content:space-between}
+  .flap .fm-recv b{color:#c8ff00;font-variant-numeric:tabular-nums}
+  .flap .fm-opt{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:11px;color:#6b7a6b}
+  .flap .fm-opt input{flex:1;background:#0e120e;border:1px solid #232a23;border-radius:4px;color:#e8f0e8;
+    padding:7px 10px;font:inherit;font-size:12px}
+  .flap .fm-sec{margin:4px 16px 8px;color:#c8ff00;font-size:11px;letter-spacing:.08em;font-weight:800}
+  .flap .fm-rows{padding:0 16px 16px}
+  .flap .fm-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #1a1f1a;
+    font-size:12px;color:#7d887d}
+  .flap .fm-row:last-child{border-bottom:0}
+  .flap .fm-row b{color:#e8f0e8;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:break-all}</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>8788 <span class="tag">Agentic</span></div>
+    <div class="meta">
+      <span class="pill" id="walletPill"><i></i>未连接</span>
+      <span class="pill" id="sessionPill"><i></i>session -</span>
+      <button class="btn ghost sm" id="btnConnect">连接</button>
+      <button class="btn ghost sm" id="btnTopSettings" title="高级设置">⚙</button>
+      <div id="topAdvanced">
+        <span class="pill" id="chainPill"><i></i>chain -</span>
+        <button class="btn ghost sm" id="btnDiag">自检</button>
+        <select id="sigMode" class="pill" style="background:#0d131c;color:var(--fg)">
+          <option value="bridge">Agentic 桥</option>
+          <option value="key">本地私钥</option>
+        </select>
+        <input id="pk" type="password" placeholder="0x 私钥（仅内存）" style="display:none;width:210px;padding:6px 10px;font-size:12px" />
+        <button class="btn ghost sm" id="btnPk" style="display:none">应用</button>
+        <label class="switch" title="开启后只模拟，不发交易">
+          <input type="checkbox" id="dryRun"><span class="track"></span><span>预演</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner">⚠️ 预演模式：只做链上读取与钱包级模拟，<b>不会发送任何交易</b>。关掉开关才会真实下单。</div>
+
+  <section class="card watch-card" id="presetWatchCard">
+    <div class="card-head">
+      <h2>Four.meme · Binance Agent ID 监听</h2>
+      <div class="right">
+        <span class="pill" id="presetWatchPill"><i></i>未启动</span>
+        <button class="btn primary sm" id="btnPresetWatchStart">开始监听</button>
+        <button class="btn ghost sm" id="btnPresetWatchStop" disabled>停止</button>
+        <button class="btn ghost sm" id="btnWatchToggle">展开</button>
+      </div>
+    </div>
+    <div class="watch-body" id="presetWatchBody">
+      <div class="grid" id="presetWatchInfo"></div>
+      <div class="grid" id="presetAutoInfo" style="margin-top:10px"></div>
+      <div class="hint">只读监听链上 <span class="mono">TokenCreated</span>，preset <span class="mono">1778027615735</span>。自动买入默认关闭；启用后仅对<b>非 WBNB/BNB 计价</b>且<b>含税综合费率 ≤5%</b> 的新币动手，固定 0.1 BNB/笔、50% 滑点、最多 10 笔/日。</div>
+      <div class="hint" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="pill off" id="autoPill"><i></i>自动买入关闭</span>
+        <button class="btn primary sm" id="btnAutoArm">启用自动买入</button>
+        <button class="btn ghost sm" id="btnAutoDisarm" disabled>关闭自动买入</button>
+      </div>
+      <div class="hint">计价白名单：NVDAB · QQQB · BNCB · BNC4 · USDT · USDC · U · USD1</div>
+      <div class="watch-events" id="presetWatchEvents"><div class="hint">还没有事件</div></div>
+      <div class="watch-events" id="presetAutoLogs"><div class="hint">自动买入日志</div></div>
+    </div>
+  </section>
+
+  <section class="card" id="unifiedTradeCard">
+    <div class="card-head">
+      <h2>统一买卖</h2>
+      <div class="right"><span class="pill off" id="unifiedPill"><i></i>自动识别</span></div>
+    </div>
+    <div id="unifiedResolveHost"></div>
+    <div class="ov-card" id="tokenOverview" style="display:none">
+      <div class="ov-top">
+        <div class="ov-id">
+          <div class="ov-sym"><b id="ovSym">—</b><span class="ov-name" id="ovName"></span></div>
+          <div class="ov-sub"><span class="mono" id="ovCa"></span><span class="ov-launch" id="ovLaunch"></span></div>
+        </div>
+        <div class="ov-quote">
+          <div class="ov-price" id="ovPrice">—</div>
+          <div class="ov-chg" id="ovChg">—</div>
+        </div>
+      </div>
+      <button class="ov-toggle" id="btnOvToggle" type="button">行情与安全 ▼</button>
+      <div id="ovDetails" style="display:none">
+        <div class="ov-grid" id="ovGrid"></div>
+        <div class="ov-badges" id="ovBadges"></div>
+        <div class="ov-links" id="ovLinks"></div>
+        <div class="ov-note" id="ovNote"></div>
+      </div>
+    </div>
+    <div class="uni-trade tw" id="unifiedTradePanel" style="display:none">
+      <div class="tw-top">
+        <div class="tw-token"><b id="uniToken">—</b><span class="uni-route" id="uniVenue">—</span></div>
+        <div class="tw-meta">
+          <span>计价</span><b id="uniQuote">—</b>
+          <span>余额</span><b id="uniBalance">—</b>
+          <button class="tw-quick on" id="btnTwQuick" type="button">快速：开</button>
+          <button class="tw-edit" id="btnTwEdit" type="button">编辑</button>
+        </div>
+      </div>
+
+      <div class="tw-position" id="twPosition">
+        <div><span>持仓</span><b id="twPosQty">—</b></div>
+        <div><span>持仓成本</span><b id="twPosCost">—</b></div>
+        <div><span>当前价值</span><b id="twPosValue">—</b></div>
+        <div><span>未实现</span><b id="twPosPnl">—</b></div>
+      </div>
+
+      <div class="tw-section tw-buy">
+        <div class="tw-sec-head">
+          <span class="tw-label">买入</span>
+          <span class="tw-hintline">BNB · 自动换汇 · 点数值直接买</span>
+          <span class="tw-wallet">BNB <b id="uniBnbBal">—</b></span>
+        </div>
+        <div class="tw-grid" id="uniBuyGrid"></div>
+        <div class="tw-foot">
+          <span>自动</span><span>滑点 <b id="uniSlip">—</b></span>
+          <span>预演 <b id="uniDry">—</b></span>
+          <span class="tw-spacer"></span>
+          <button class="tw-edit" id="btnTwEditBuy" type="button">编辑数值</button>
+        </div>
+      </div>
+
+      <div class="tw-section tw-sell">
+        <div class="tw-sec-head">
+          <span class="tw-label">卖出</span>
+          <span class="tw-hintline">按余额比例 · 卖出换 BNB</span>
+          <span class="tw-wallet">持仓 <b id="uniTokenBal">—</b></span>
+        </div>
+        <div class="tw-grid" id="uniSellGrid"></div>
+        <div class="tw-foot">
+          <span>自动</span><span>滑点 <b id="uniSellSlip">—</b></span>
+          <span>预演 <b id="uniDrySell">—</b></span>
+          <span class="tw-spacer"></span>
+          <button class="tw-edit" id="btnTwEditSell" type="button">编辑数值</button>
+        </div>
+      </div>
+
+      <div class="tw-settings" title="滑点对所有路由生效；Gas/MEV 对 DEX 市价、换汇和 Gang 的 market-order 生效，Portal/four 内盘合约调用使用钱包默认 Gas/MEV">
+        <div class="tw-set-group">
+          <span>滑点</span>
+          <button class="tw-chip" type="button" data-slip-bps="100">1%</button>
+          <button class="tw-chip" type="button" data-slip-bps="300">3%</button>
+          <button class="tw-chip" type="button" data-slip-bps="500">5%</button>
+          <input id="twSlipCustom" type="number" min="0.1" max="100" step="0.1" placeholder="自定义%" />
+        </div>
+        <div class="tw-set-group">
+          <span>Gas</span>
+          <select id="twGasLevel">
+            <option value="LOW">慢</option>
+            <option value="MEDIUM" selected>标准</option>
+            <option value="HIGH">快</option>
+          </select>
+        </div>
+        <label class="tw-mev"><input type="checkbox" id="twMev" checked /> MEV 保护</label>
+      </div>
+
+      <div class="tw-stats">
+        <div><span>余额</span><b id="twStatBalance">—</b></div>
+        <div><span>总买入</span><b id="twStatBuy">—</b></div>
+        <div><span>总卖出</span><b id="twStatSell">—</b></div>
+        <div><span>总利润</span><b id="twStatPnl">—</b></div>
+      </div>
+      <div class="tw-note">利润 = 已实现（BAW 最近 100 笔交易，不含未实现与 gas）</div>
+
+      <div class="tw-edit-panel" id="twEditPanel" style="display:none">
+        <div class="tw-edit-title">买入金额 BNB（8 个，可任意修改）</div>
+        <div class="tw-edit-grid" id="twBuyInputs"></div>
+        <div class="tw-edit-title">卖出比例 %（8 个，可任意修改，0 = 不显示）</div>
+        <div class="tw-edit-grid" id="twSellInputs"></div>
+        <div class="tw-edit-actions">
+          <button class="btn primary" id="btnTwSave" type="button">保存数值</button>
+          <button class="btn ghost" id="btnTwReset" type="button">恢复默认</button>
+        </div>
+        <div class="tw-custom">
+          <input id="uniCustomBuy" type="number" min="0" step="0.0001" placeholder="自定义买入 BNB" />
+          <button class="btn buy" id="btnUniCustomBuy" type="button">买入</button>
+          <input id="uniCustomSell" type="number" min="1" max="100" step="1" placeholder="自定义卖出 %" />
+          <button class="btn sell" id="btnUniCustomSell" type="button">卖出</button>
+        </div>
+      </div>
+
+      <div class="hint" id="uniHint">自动识别 Portal / four.meme / DEX / Gang；点买入数值直接下单，点卖出比例直接卖；数值可在「编辑」里随意修改。</div>
+    </div>
+    <div class="uni-legacy" style="display:none">
+      <div class="uni-pane" data-uni-pane="portal"></div>
+      <div class="uni-pane" data-uni-pane="four"></div>
+      <div class="uni-pane" data-uni-pane="dex"></div>
+      <div class="uni-pane" data-uni-pane="gang"></div>
+    </div>
+  </section>
+
+  <section class="card" id="dexBuyCard">
+    <div class="card-head">
+      <h2>DEX 买入 / 卖出（任意 ERC20）</h2>
+      <div class="right"><span class="pill off"><i></i>需手动确认</span></div>
+    </div>
+    <div class="input-row">
+      <input id="dexBuyCa" type="text" spellcheck="false" placeholder="代币合约地址 0x…（非内盘 / 非 four.meme 也可）" />
+      <button class="btn primary" id="btnDexBuyQuote">报价</button>
+    </div>
+    <div class="split" style="margin-top:10px">
+      <div>
+        <label>支付 BNB</label>
+        <input type="number" id="dexBuyAmount" value="0.1" min="0" step="0.001" />
+      </div>
+      <div>
+        <label>来源</label>
+        <input type="text" value="BAW DEX" disabled />
+      </div>
+    </div>
+    <div class="fm-quick" data-dexamt>
+      <button data-amt="0.01">0.01</button><button data-amt="0.05">0.05</button>
+      <button data-amt="0.1">0.1</button><button data-amt="0.5">0.5</button>
+    </div>
+    <div class="sum" id="dexBuySum"><span>输入 CA 和 BNB 数量后报价</span></div>
+    <button class="btn buy block" id="btnDexBuy" style="margin-top:14px">DEX 市价买入</button>
+    <div class="hint">任意 ERC20，未审计；先报价再确认，失败不自动重试。此入口不走内盘，也不受 preset 监听限制。</div>
+    <div class="fm-sec" style="margin-top:16px">[ DEX 卖出 ]</div>
+    <div class="split" style="margin-top:10px">
+      <div>
+        <label>卖出比例</label>
+        <div class="fm-quick" data-dexsellpct style="grid-template-columns:repeat(3,1fr);margin-top:8px">
+          <button data-pct="10">10%</button>
+          <button data-pct="50">50%</button>
+          <button data-pct="100" class="active">100%</button>
+        </div>
+      </div>
+      <div>
+        <label>到账</label>
+        <input type="text" value="BNB" disabled />
+      </div>
+    </div>
+    <div class="sum" id="dexSellSum"><span>选择比例后卖出，换成 BNB</span></div>
+    <button class="btn sell block" id="btnDexSell" style="margin-top:14px">DEX 卖出换 BNB</button>
+  </section>
+
+  <section class="card" id="gangBuyCard">
+    <div class="card-head">
+      <h2>Gang Launchpad 买入 / 卖出（GANG 计价）</h2>
+      <div class="right"><span class="pill off"><i></i>需 Agent ID · 手动确认</span></div>
+    </div>
+    <div class="input-row">
+      <input id="gangToken" type="text" spellcheck="false" placeholder="Gang LaunchpadV2 代币 CA 0x…" />
+      <button class="btn primary" id="btnGangQuote">报价</button>
+    </div>
+    <div class="split" style="margin-top:10px">
+      <div>
+        <label>支付 BNB</label>
+        <input type="number" id="gangBnb" value="0.1" min="0" step="0.001" />
+      </div>
+      <div>
+        <label>来源</label>
+        <input type="text" value="Gang V2" disabled />
+      </div>
+    </div>
+    <div class="fm-quick" data-gangamt>
+      <button data-amt="0.01">0.01</button><button data-amt="0.05">0.05</button>
+      <button data-amt="0.1">0.1</button><button data-amt="0.5">0.5</button>
+    </div>
+    <div class="sum" id="gangSum"><span>输入 CA 和 BNB 数量后报价</span></div>
+    <button class="btn buy block" id="btnGangBuy" style="margin-top:14px">Gang 市价买入</button>
+    <div class="hint">仅支持 LaunchpadV2 且计价币为 GANG 的内盘代币：先 BNB→GANG，approve，再 buy；需要 Agent ID 且受 1% 钱包上限限制。失败不自动重试。</div>
+    <div class="fm-sec" style="margin-top:16px">[ Gang 卖出 ]</div>
+    <div class="split" style="margin-top:10px">
+      <div>
+        <label>卖出比例</label>
+        <div class="fm-quick" data-gangsellpct style="grid-template-columns:repeat(3,1fr);margin-top:8px">
+          <button data-pct="10">10%</button>
+          <button data-pct="50">50%</button>
+          <button data-pct="100" class="active">100%</button>
+        </div>
+      </div>
+      <div>
+        <label>到账</label>
+        <input type="text" value="BNB" disabled />
+      </div>
+    </div>
+    <div class="sum" id="gangSellSum"><span>选择比例后卖出，GANG 自动换成 BNB</span></div>
+    <button class="btn sell block" id="btnGangSell" style="margin-top:14px">Gang 卖出换 BNB</button>
+  </section>
+
+  <section class="card" id="resolveCard">
+    <div class="card-head">
+      <h2><span class="num">1</span>解析代币</h2>
+      <div class="right"><button class="btn ghost sm" id="btnPasteCa">粘贴解析</button><button class="btn ghost sm" id="btnClearCa">清空</button></div>
+    </div>
+    <div class="input-row">
+      <input id="ca" type="text" spellcheck="false" placeholder="代币合约地址 0x…（自动识别 Portal / four.meme / DEX / Gang）" />
+      <button class="btn primary" id="btnResolve">解析</button>
+    </div>
+    <div class="grid" id="tokenInfo"></div>
+    <div class="hint">解析时做绑定校验：<span class="mono">Probe.market() == Market</span>，且 <span class="mono">assetProbe</span> 的 MARKET / QUOTE / DECIMALS 一致。</div>
+  </section>
+
+  <section class="card flap" id="fmCard" style="display:none">
+    <div class="fm-head">
+      <div class="fm-avatar" id="fmAvatar">$</div>
+      <div>
+        <div class="fm-sym" id="fmSym">$TOKEN</div>
+        <div class="fm-sub">
+          <span class="mono" id="fmCa">0x…</span>
+          <button class="copy" id="fmCopy">复制 CA</button>
+          <span id="fmName"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fm-tabs">
+      <button class="fm-tab active" id="fmTabBuy">买入</button>
+      <button class="fm-tab" id="fmTabSell">卖出</button>
+    </div>
+
+    <div class="fm-body">
+      <div id="fmPaneBuy">
+        <div class="fm-balance"><span>余额</span><span><b id="fmBnbBal">0</b> <span id="fmBalUnit">BNB</span></span></div>
+        <div class="pay-modes" id="fmPayModes" style="display:none">
+          <button type="button" class="pay-mode active" id="fmPayBnb" data-fmpaymode="bnb">BNB（自动换算）</button>
+          <button type="button" class="pay-mode" id="fmPayQuote" data-fmpaymode="quote">直接输入计价币</button>
+        </div>
+        <div class="swap-box" id="fmSwapBox" style="display:none">
+          <div class="swap-line"><span>自动换汇</span><b id="fmSwapPair">BNB → —</b></div>
+          <div class="swap-est" id="fmSwapEstimate">输入 BNB 数量后显示 ≈ 计价币</div>
+        </div>
+        <div class="fm-input">
+          <input type="number" id="fmBuyAmount" step="0.0001" min="0" placeholder="0" />
+          <span class="unit" id="fmBuyUnit">BNB</span>
+        </div>
+        <div class="fm-quick" data-fmpct="buy">
+          <button data-pct="25">25%</button><button data-pct="50">50%</button>
+          <button data-pct="75">75%</button><button data-pct="100">100%</button>
+        </div>
+        <div class="fm-dash"><span>通过 four.meme 路由</span></div>
+        <button class="fm-cta buy" id="btnFmBuy">买入</button>
+        <div class="fm-recv"><span>你将收到</span><b id="fmRecv">以链上成交为准</b></div>
+        <div class="fm-opt"><span>最少得到</span><input type="number" id="fmMinOut" step="1" min="0" placeholder="留空 = 不设下限" /></div>
+      </div>
+
+      <div id="fmPaneSell" style="display:none">
+        <div class="fm-balance"><span>余额</span><span><b id="fmTokBal">0</b> <span id="fmTokUnit">TOKEN</span></span></div>
+        <div class="fm-input">
+          <input type="number" id="fmSellAmount" step="1" min="0" placeholder="0" />
+          <span class="unit" id="fmSellUnit">TOKEN</span>
+        </div>
+        <div class="fm-quick" data-fmpct="sell">
+          <button data-pct="25">25%</button><button data-pct="50">50%</button>
+          <button data-pct="75">75%</button><button data-pct="100">100%</button>
+        </div>
+        <div class="fm-dash"><span>通过 four.meme 路由</span></div>
+        <button class="fm-cta sell" id="btnFmSell">卖出</button>
+        <button class="fm-cta sell" id="btnFmDexSell" style="margin-top:8px;background:#2a2308;border:1px solid #a16207;color:#fde68a">DEX 市价卖出（内盘不可卖时）</button>
+        <div class="hint" style="margin-top:6px">内盘已关闭/迁移的币不要重复点「卖出」；用 DEX 市价卖出，按 baw 报价全部换成 BNB。</div>
+        <div class="fm-recv"><span>你将收到</span><b>以链上成交为准</b></div>
+        <div class="fm-opt"><span>最少得到</span><input type="number" id="fmMinFunds" step="0.0001" min="0" placeholder="留空 = 不设下限 (BNB)" /></div>
+      </div>
+
+      <div class="fm-sec">[ 代币信息 ]</div>
+      <div class="fm-rows" id="fmInfo"></div>
+    </div>
+  </section>
+
+  <section class="card" id="posCard" style="display:none">    <div class="card-head">
+      <h2><span class="num">2</span>我的持仓</h2>
+      <div class="right"><button class="btn ghost sm" id="btnRefreshPos">刷新</button></div>
+    </div>
+    <div class="grid" id="posGrid"></div>
+    <div class="progress"><div id="poolBar"></div></div>
+    <div class="pool-line"><span id="poolLeft">—</span><span id="poolRight">—</span></div>
+  </section>
+
+  <section class="card" id="probeTrade">
+    <div class="tabs">
+      <button class="tab active buy" data-tab="buy" id="tabBuy">买入</button>
+      <button class="tab" data-tab="sell" id="tabSell">卖出</button>
+    </div>
+
+    <div id="paneBuy">
+      <div class="pay-modes" id="payModes" style="display:none">
+        <button type="button" class="pay-mode active" id="payModeBnb" data-paymode="bnb">BNB（自动换算）</button>
+        <button type="button" class="pay-mode" id="payModeQuote" data-paymode="quote">直接输入计价币</button>
+      </div>
+      <div class="swap-box" id="swapBox" style="display:none">
+        <div class="swap-line"><span>自动换汇</span><b id="swapPair">BNB → —</b></div>
+        <div class="swap-est" id="swapEstimate">输入 BNB 数量后显示 ≈ 计价币</div>
+        <div class="hint">先换汇并等链上收据，刷新余额后用实际到账买入；换汇失败不会自动重试。</div>
+      </div>
+      <div class="split">
+        <div>
+          <label id="buyAmountLabel">买入金额</label>
+          <input type="number" id="buyAmount" step="0.0001" min="0" placeholder="先解析代币" />
+          <div class="quick">
+            <button class="chip" data-buypct="10">10%</button>
+            <button class="chip" data-buypct="25">25%</button>
+            <button class="chip" data-buypct="50">50%</button>
+            <button class="chip" data-buypct="100">全部</button>
+          </div>
+        </div>
+        <div>
+          <label>滑点 bps</label>
+          <input type="number" id="buySlip" value="100" min="0" max="10000" step="1" />
+        </div>
+      </div>
+      <div class="sum" id="buySum"><span>输入金额后显示预计成交</span></div>
+      <button class="btn buy block" id="btnBuy" disabled style="margin-top:14px">买入</button>
+    </div>
+
+    <div id="paneSell" style="display:none">
+      <div class="split">
+        <div>
+          <label>卖出比例</label>
+          <input type="number" id="sellPct" value="100" min="1" max="100" step="1" />
+          <div class="quick">
+            <button class="chip" data-sellpct="25">25%</button>
+            <button class="chip" data-sellpct="50">50%</button>
+            <button class="chip" data-sellpct="100">全部</button>
+          </div>
+        </div>
+        <div>
+          <label>滑点 bps</label>
+          <input type="number" id="sellSlip" value="100" min="0" max="10000" step="1" />
+        </div>
+      </div>
+      <div class="sum" id="sellSum"><span>解析代币后显示预计到账</span></div>
+      <button class="btn sell block" id="btnSell" disabled style="margin-top:14px">卖出</button>
+      <div class="hint">份额是 Market 内部记账，不是 ERC20，卖出不需要授权。</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>日志</h2>
+      <div class="right">
+        <button class="btn ghost sm" id="btnLogToggle">展开</button>
+        <button class="btn ghost sm" id="btnCopyLog">复制</button>
+        <button class="btn ghost sm" id="btnClearLog">清空</button>
+      </div>
+    </div>
+    <div id="log" style="display:none"></div>
+  </section>
+
+  <div class="hint footer-note" id="footerNote" style="text-align:center">
+    签名由本地桥 <span class="mono" id="bridgeHost">127.0.0.1:8788</span> 调用 <span class="mono">baw</span> 完成，私钥不进浏览器 · 未审计合约，自担风险
+  </div>
+</div>
+
+<dialog id="confirmDlg">
+  <div class="dlg-head" id="dlgTitle">确认交易</div>
+  <div class="dlg-body" id="dlgBody"></div>
+  <div class="warnbox" id="dlgWarn" style="display:none"></div>
+  <div class="dlg-foot">
+    <button class="btn ghost" id="dlgCancel">取消</button>
+    <button class="btn primary" id="dlgOk">确认执行</button>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script type="module">
+import * as P from './protocol.js?v=14';
+
+const BRIDGE_TOKEN = '__BRIDGE_TOKEN__';
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const GAS_RESERVE = 2000000000000000n;
+
+const state = { account: null, info: null, bal: null, busy: false, sigMode: 'bridge', pk: null, payMode: 'quote', swapQuote: null, fmPayMode: 'quote', fmSwapQuote: null };
+
+/* ---------- utils ---------- */
+function log(msg, cls = '') {
+  const el = $('#log');
+  const t = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const d = document.createElement('div');
+  d.className = cls;
+  d.innerHTML = `<span class="t">[${t}]</span> ${esc(msg)}`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function logLink(text, href) {
+  const el = document.querySelector('#log');
+  const t = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const d = document.createElement('div');
+  d.innerHTML = '<span class="t">[' + t + ']</span> ' + esc(text) +
+    ' <a href="' + esc(href) + '" target="_blank" rel="noreferrer">bscscan ↗</a>';
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}const short = (a) => (a && a.length > 12 ? a.slice(0, 6) + '…' + a.slice(-4) : a || '—');
+
+function fmt(v, decimals, maxFrac = 6) {
+  if (v === undefined || v === null) return '—';
+  const s = P.formatUnits(BigInt(v), decimals);
+  const [i, f] = s.split('.');
+  const ii = i.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return f ? `${ii}.${f.slice(0, maxFrac)}` : ii;
+}
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 1800);
+}
+async function copyText(text, label) {
+  try { await navigator.clipboard.writeText(text); toast(label + ' 已复制'); }
+  catch { toast('复制失败'); }
+}
+const kv = (k, v, extra = '') => `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${v}${extra ? ' ' + extra : ''}</div></div>`;
+const kvCopy = (k, addr) => `<div class="kv"><div class="k">${esc(k)}</div><div class="v"><span class="mono">${short(addr)}</span><button class="copy" data-copy="${esc(addr)}">复制</button></div></div>`;
+
+/* ---------- bridge ---------- */
+async function bridge(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { 'content-type': 'application/json', 'x-bridge-token': BRIDGE_TOKEN, ...(opts.headers || {}) } });
+  const j = await res.json().catch(() => ({ ok: false, error: 'HTTP ' + res.status }));
+  if (!res.ok) {
+    const e = j.error;
+    throw new Error(typeof e === 'string' ? e : (e && (e.message || e.name)) || 'HTTP ' + res.status);
+  }
+  return j;
+}
+function bridgeErr(e, prefix) {
+  const m = typeof e === 'string' ? e : (e && (e.message || e.name)) || JSON.stringify(e);
+  return `${prefix}：${m}`;
+}
+function errDetail(e) {
+  if (!e) return '未知错误';
+  if (typeof e === 'string') return e;
+  const bits = [];
+  if (e.name) bits.push(e.name);
+  if (e.code !== undefined && e.code !== null) bits.push('code ' + e.code);
+  if (e.message) bits.push(e.message);
+  return bits.length ? bits.join(' · ') : JSON.stringify(e);
+}
+const isAutoSwap = () => !!(state.info && !state.info.native && state.payMode === 'bnb');
+
+/* ---------- preset 新币只读监听 ---------- */
+let presetWatchLastError = null;
+
+function renderPresetWatch(s) {
+  if (!s || !s.ok) return;
+  const running = !!s.running;
+  const connected = !!s.connected;
+  const pill = $('#presetWatchPill');
+  if (connected) {
+    pill.className = 'pill on';
+    pill.innerHTML = '<i></i>监听中';
+  } else if (running) {
+    pill.className = 'pill warn';
+    pill.innerHTML = '<i></i>连接/重连中';
+  } else {
+    pill.className = 'pill off';
+    pill.innerHTML = '<i></i>未启动';
+  }
+  $('#btnPresetWatchStart').disabled = running;
+  $('#btnPresetWatchStop').disabled = !running;
+  $('#presetWatchInfo').innerHTML = [
+    kv('Preset', `${esc(s.presetName || '')} <small>${esc(s.presetId)}</small>`),
+    kv('监听范围', '仅预设 1778027615735 的新 TokenCreated'),
+    kv('最近区块', s.lastHead ? Number(s.lastHead).toLocaleString('en-US') : '—'),
+    kv('已发现', `${(s.events || []).length} 条 <small>只存内存</small>`),
+  ].join('');
+  const box = $('#presetWatchEvents');
+  if (!(s.events || []).length) {
+    box.innerHTML = `<div class="hint">等待新币…${s.lastError ? '<br><span class="bad">' + esc(s.lastError) + '</span>' : ''}</div>`;
+    return;
+  }
+  box.innerHTML = s.events.slice(0, 30).map((e) => {
+    const t = new Date(e.at);
+    return `<div class="watch-event">
+      <div class="top"><b>${esc(e.symbol || 'TOKEN')}</b><span>${esc(e.name || '')}</span><span class="mono">${short(e.token)}</span><button class="copy" data-copy="${esc(e.token)}">复制 CA</button></div>
+      <div class="meta">Token <span class="mono">${esc(e.token)}</span></div>
+      <div class="meta">计价 ${esc(e.quoteSymbol || '')} <span class="mono">${short(e.quote)}</span> · 创建者 <span class="mono">${short(e.creator)}</span></div>
+      <div class="meta">区块 ${esc(e.blockNumber)} · ${esc(isNaN(t) ? e.at : t.toLocaleString('zh-CN', { hour12: false }))} · <a href="https://bscscan.com/tx/${esc(e.transactionHash)}" target="_blank" rel="noreferrer">bscscan ↗</a></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPresetAuto(a) {
+  if (!a || !a.ok) return;
+  const armed = !!a.armed;
+  const pill = $('#autoPill');
+  pill.className = 'pill ' + (armed ? 'on' : 'off');
+  pill.innerHTML = `<i></i>${armed ? `自动买入已启用 ${a.count}/${a.maxDaily}` : '自动买入关闭'}`;
+  $('#btnAutoArm').disabled = armed;
+  $('#btnAutoDisarm').disabled = !armed;
+  $('#presetAutoInfo').innerHTML = [
+    kv('每笔', `${esc(a.budgetBnb)} BNB <small>固定</small>`),
+    kv('滑点', `${Number(a.slippageBps) / 100}% <small>最低到账</small>`),
+    kv('今日', `${a.count}/${a.maxDaily} 笔 <small>已用 ${Number(a.spentBnb).toFixed(1)} BNB</small>`),
+    kv('触发', '非 WBNB/BNB · 含税费率 ≤5%'),
+  ].join('');
+  const logs = a.logs || [];
+  $('#presetAutoLogs').innerHTML = logs.length
+    ? logs.map((l) => `<div class="watch-event"><div class="meta" style="margin-top:0"><b class="${esc(l.cls)}">${new Date(l.at).toLocaleTimeString('zh-CN', { hour12: false })}</b> ${esc(l.message)}</div></div>`).join('')
+    : `<div class="hint">自动买入日志${a.lastError ? '<br><span class="bad">' + esc(a.lastError) + '</span>' : ''}</div>`;
+}
+
+async function loadPresetWatch() {
+  const [s, a] = await Promise.all([
+    bridge('/api/preset-watch/status'),
+    bridge('/api/preset-autobuy/status').catch(() => null),
+  ]);
+  if (s.ok) renderPresetWatch(s);
+  if (a && a.ok) renderPresetAuto(a);
+  if (s.lastError && s.lastError !== presetWatchLastError) {
+    presetWatchLastError = s.lastError;
+    log('监听：' + s.lastError, 'warn');
+  }
+}
+
+async function startPresetWatch() {
+  log('启动 preset 新币监听…');
+  const s = await bridge('/api/preset-watch/start', { method: 'POST', body: '{}' });
+  renderPresetWatch(s);
+  log(s.lastError ? '监听已启动，但历史回填失败：' + s.lastError : '监听已启动；自动买入默认关闭', s.lastError ? 'warn' : 'ok');
+  await loadPresetWatch().catch(() => {});
+}
+
+async function stopPresetWatch() {
+  const s = await bridge('/api/preset-watch/stop', { method: 'POST', body: '{}' });
+  renderPresetWatch(s);
+  log('监听和自动买入已停止', 'warn');
+  await loadPresetWatch().catch(() => {});
+}
+
+async function armAutoBuy() {
+  const ok = await openRows('确认启用自动买入', [
+    ['范围', 'preset 1778027615735 · 非 WBNB/BNB 计价的 新币'],
+    ['税费', '链上含税综合费率 ≤5%，超过则跳过'],
+    ['每笔', '0.1 BNB（固定）'],
+    ['滑点', '50%（最低到账）'],
+    ['上限', '10 笔/日，最多 1 BNB/日'],
+    ['方式', 'OpenFour buyByBudget，BNB 在同一笔交易内换成计价币'],
+  ], '⚠️ 这是真实链上自动买入，不是预演。出现符合条件的非 WBNB/BNB 新币时会立即签名提交，失败不自动重试；每笔 0.1 BNB，最多 10 笔/日。钱包若要求 App 确认，自动买入会停止。');
+  if (!ok) { log('已取消启用自动买入'); return; }
+  const a = await bridge('/api/preset-autobuy/arm', { method: 'POST', body: '{}' });
+  if (!a.ok) throw new Error(a.error || '启用失败');
+  renderPresetAuto(a);
+  log(`自动买入已启用：每笔 0.1 BNB，非 WBNB/BNB 计价，含税费率≤5%，今日上限 10 笔`, 'ok');
+  await loadPresetWatch().catch(() => {});
+}
+
+async function disarmAutoBuy() {
+  const a = await bridge('/api/preset-autobuy/disarm', { method: 'POST', body: '{}' });
+  renderPresetAuto(a);
+  log('自动买入已关闭', 'warn');
+}
+
+/* ---------- 任意 ERC20 DEX 市价买入 ---------- */
+let dexBuyQuoteData = null;
+let dexSellPct = 100;
+
+async function quoteDexBuy() {
+  const ca = $('#dexBuyCa').value.trim();
+  const amount = $('#dexBuyAmount').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(ca)) throw new Error('代币 CA 格式不对');
+  if (!amount) throw new Error('填支付 BNB 数量');
+  const j = await bridge('/api/dex-buy/quote', {
+    method: 'POST',
+    body: JSON.stringify({ toToken: ca, amount, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    dexBuyQuoteData = null;
+    throw new Error(bridgeErr(j.error, 'DEX 买入报价失败'));
+  }
+  dexBuyQuoteData = j;
+  const q = j.quote || {};
+  $('#dexBuySum').innerHTML =
+    `<span>支付 <b>${esc(amount)} BNB</b></span>
+     <span>预计得到 <b>${esc(String(q.toCoinAmount || '—'))} ${esc(String(q.toCoinSymbol || 'TOKEN'))}</b></span>
+     <span>滑点 <b>${esc(String((Number(q.slippage) * 100).toFixed(2)))}%</b></span>`;
+  log(`DEX 报价：${amount} BNB ≈ ${q.toCoinAmount} ${q.toCoinSymbol}`, 'ok');
+  return j;
+}
+
+async function dexBuy(skip = false) {
+  const caFast = $('#dexBuyCa').value.trim();
+  const amountFast = $('#dexBuyAmount').value.trim();
+  if (skip && !$('#dryRun').checked) {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(caFast)) throw new Error('DEX 买入 CA 格式不对');
+    if (!amountFast) throw new Error('填支付 BNB 数量');
+    log('快速 DEX 买入：跳过预报价，直接提交…', 'warn');
+    const j = await bridge('/api/dex-buy', {
+      method: 'POST',
+      body: JSON.stringify({ toToken: caFast, amount: amountFast, ...tradeOptions() }),
+    });
+    if (!j.ok) {
+      const em = errDetail(j.error);
+      log(`DEX 买入失败：${em}`, 'bad');
+      if (j.orderId) log(`订单 ${j.orderId} · 状态 ${j.status || '—'}`, 'bad');
+      throw new Error(`DEX 买入失败：${em}`);
+    }
+    const sym = j.order?.toTokenSymbol || 'TOKEN';
+    log(`DEX 买入成功：order ${j.orderId} · 实际到账 ${j.order?.toTokenActualQty ?? '—'} ${sym}`, 'ok');
+    if (j.txHash) logLink(`DEX 买入交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+    return;
+  }
+  const q = await quoteDexBuy();
+  const ca = $('#dexBuyCa').value.trim();
+  const amount = $('#dexBuyAmount').value.trim();
+  const name = q.quote && q.quote.toCoinSymbol ? q.quote.toCoinSymbol : 'TOKEN';
+  const expected = q.quote && q.quote.toCoinAmount ? q.quote.toCoinAmount : '—';
+  const ok = await openRows('确认 DEX 市价买入', [
+    ['Token', short(ca)],
+    ['支付', amount + ' BNB'],
+    ['预计得到', expected + ' ' + name],
+    ['方式', 'BAW market-order · 失败不自动重试'],
+  ], '⚠️ 任意 ERC20，合约未审计；真实链上交易，价格以成交为准，不可撤销。', skip);
+  if (!ok) { log('已取消'); return; }
+
+  const j = await bridge('/api/dex-buy', {
+    method: 'POST',
+    body: JSON.stringify({ toToken: ca, amount, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    const em = errDetail(j.error);
+    log(`DEX 买入失败：${em}`, 'bad');
+    if (j.error) log(`CLI/订单原样返回：${JSON.stringify(j.error)}`, 'bad');
+    if (j.orderId) log(`订单 ${j.orderId} · 状态 ${j.status || '—'}`, 'bad');
+    throw new Error(`DEX 买入失败：${em}`);
+  }
+  log(`DEX 买入成功：order ${j.orderId} · 实际到账 ${j.order.toTokenActualQty} ${name}`, 'ok');
+  logLink(`DEX 买入交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+}
+
+/* ---------- Gang LaunchpadV2（GANG 计价）买入 ---------- */
+let gangQuoteData = null;
+let gangSellPct = 100;
+
+async function quoteGangBuy() {
+  const token = $('#gangToken').value.trim();
+  const amount = $('#gangBnb').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token)) throw new Error('Gang 代币 CA 格式不对');
+  if (!amount) throw new Error('填支付 BNB 数量');
+  const j = await bridge('/api/gang/quote', {
+    method: 'POST',
+    body: JSON.stringify({ token, amount, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    gangQuoteData = null;
+    throw new Error(j.error || 'Gang 报价失败');
+  }
+  gangQuoteData = j;
+  $('#gangSum').innerHTML =
+    `<span><b>${esc(j.symbol || 'TOKEN')}</b></span>
+     <span>换汇 <b>${esc(j.gangAmount)} ${esc(j.quote || 'GANG')}</b></span>
+     <span>预计买入 <b>${esc(j.tokensOut)}</b> 枚</span>
+     <span>最少 <b>${esc(j.minTokensOut)}</b> 枚</span>
+     <span>进度 <b>${esc(String(j.progressPct))}%</b></span>
+     <span>${j.eligible ? '<b class="ok">Agent ID ✓</b>' : '<b class="bad">无 Agent ID</b>'}</span>` +
+    (j.taxed ? '<span class="bad">taxed 盘</span>' : '<span>untaxed</span>');
+  log(`Gang 报价：${amount} BNB → ${j.gangAmount} ${j.quote || 'GANG'} → 约 ${j.tokensOut} ${j.symbol}（最少 ${j.minTokensOut}）`, 'ok');
+  return j;
+}
+
+function gangBusyMessage(j, side = '交易') {
+  const d = j && j.detail ? j.detail : {};
+  const sec = Math.max(0, Math.round(Number(d.elapsedMs || 0) / 1000));
+  const action = d.action || 'Gang ' + side;
+  const since = d.since ? new Date(d.since).toLocaleTimeString('zh-CN', { hour12: false }) : null;
+  return `上一笔 Gang ${action} 还在处理中（已 ${sec}s${since ? '，开始于 ' + since : ''}）。请去 Binance App 确认，或等它结束后再点；不要连续点。`;
+}
+
+async function buyGang(skip = false) {
+  const q = await quoteGangBuy();
+  const token = $('#gangToken').value.trim();
+  const amount = $('#gangBnb').value.trim();
+  const ok = await openRows('确认 Gang 买入', [
+    ['Token', short(token)],
+    ['支付', amount + ' BNB'],
+    ['换汇', '≈ ' + q.gangAmount + ' ' + (q.quote || 'GANG')],
+    ['预计买入', q.tokensOut + ' ' + q.symbol],
+    ['最少得到', q.minTokensOut + ' ' + q.symbol],
+    ['执行', 'BNB→' + (q.quote || 'GANG') + ' → approve → buy（3 笔交易）'],
+  ], '⚠️ 真实链上交易。换汇成功但 approve/buy 失败时，会保留计价币并提示「已换得 X 未买入」，不会自动重试。需要 Agent ID，受 1% 钱包上限限制。', skip);
+  if (!ok) { log('已取消'); return; }
+
+  const j = await bridge('/api/gang/buy', {
+    method: 'POST',
+    body: JSON.stringify({ token, amount, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    if (j.busy) {
+      const msg = gangBusyMessage(j, '买入');
+      log(msg, 'warn');
+      throw new Error(msg);
+    }
+    const em = errDetail(j.error);
+    if (j.receivedGang) {
+      const msg = `已换得 ${j.receivedGang} ${j.quoteSymbol || 'GANG'}，未买入：${em}`;
+      log(msg, 'bad');
+      throw new Error(msg);
+    }
+    log(`Gang 买入失败：${em}`, 'bad');
+    throw new Error(`Gang 买入失败：${em}`);
+  }
+  log(`Gang 买入成功：${j.gangSpent} ${j.quoteSymbol || 'GANG'} → 最少 ${j.minTokensOut} ${j.symbol} · buy tx ${short(j.buyTxHash)}`, 'ok');
+  if (j.swapTxHash) logLink(`换汇交易 ${short(j.swapTxHash)}`, 'https://bscscan.com/tx/' + j.swapTxHash);
+  if (j.buyTxHash) logLink(`Gang 买入交易 ${short(j.buyTxHash)}`, 'https://bscscan.com/tx/' + j.buyTxHash);
+}
+
+/* ---------- 通用 DEX 卖出（任意 ERC20 → BNB） ---------- */
+async function quoteDexSellGeneric() {
+  await preflight();
+  const token = $('#dexBuyCa').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token)) throw new Error('DEX 卖出 CA 格式不对');
+  const pct = Number(dexSellPct);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 100) throw new Error('卖出比例需要 1–100 的整数');
+  let decimals = 18;
+  try { decimals = Number(BigInt(await P.ethCall(token, P.SEL.decimals))); } catch { decimals = 18; }
+  const bal = await P.erc20Balance(token, state.account);
+  if (bal === 0n) throw new Error('代币余额为 0');
+  const amountRaw = (bal * BigInt(pct)) / 100n;
+  if (amountRaw <= 0n) throw new Error('该比例下卖出数量为 0');
+  const amount = P.formatUnits(amountRaw, decimals);
+  const q = await bridge('/api/dex-sell/quote', {
+    method: 'POST',
+    body: JSON.stringify({ token, amount, ...tradeOptions() }),
+  });
+  if (!q.ok) throw new Error(bridgeErr(q.error, 'DEX 卖出报价失败'));
+  $('#dexSellSum').innerHTML =
+    `<span>卖出 <b>${pct}%</b> · <b>${esc(amount)}</b> 枚</span>
+     <span>预计得到 <b>${esc(String(q.quote?.toCoinAmount || '—'))} BNB</b></span>
+     <span>滑点 <b>${esc(String((Number(q.quote?.slippage || 0) * 100).toFixed(2)))}%</b></span>`;
+  return { token, amount, q, pct };
+}
+
+async function dexSellGeneric(skip = false) {
+  if (skip && !$('#dryRun').checked) {
+    await preflight();
+    const tokenFast = $('#dexBuyCa').value.trim();
+    if (!/^0x[0-9a-fA-F]{40}$/.test(tokenFast)) throw new Error('DEX 卖出 CA 格式不对');
+    const pctFast = Number(dexSellPct);
+    if (!Number.isInteger(pctFast) || pctFast < 1 || pctFast > 100) throw new Error('卖出比例需要 1–100 的整数');
+    let decimalsFast = 18;
+    try { decimalsFast = Number(BigInt(await P.ethCall(tokenFast, P.SEL.decimals))); } catch { decimalsFast = 18; }
+    const balFast = await P.erc20Balance(tokenFast, state.account);
+    if (balFast === 0n) throw new Error('代币余额为 0');
+    const rawFast = (balFast * BigInt(pctFast)) / 100n;
+    if (rawFast <= 0n) throw new Error('该比例下卖出数量为 0');
+    const amountFast = P.formatUnits(rawFast, decimalsFast);
+    log(`快速 DEX 卖出（${pctFast}%）：跳过预报价，直接提交…`, 'warn');
+    const j = await bridge('/api/dex-sell', {
+      method: 'POST',
+      body: JSON.stringify({ token: tokenFast, amount: amountFast, ...tradeOptions() }),
+    });
+    if (!j.ok) {
+      const em = errDetail(j.error);
+      log(`DEX 卖出失败：${em}`, 'bad');
+      if (j.orderId) log(`订单 ${j.orderId} · 状态 ${j.status || '—'}`, 'bad');
+      throw new Error(`DEX 卖出失败：${em}`);
+    }
+    log(`DEX 卖出成功（${pctFast}%）：${j.order?.fromTokenActualQty || amountFast} → ${j.order?.toTokenActualQty ?? '—'} BNB`, 'ok');
+    if (j.txHash) logLink(`DEX 卖出交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+    return;
+  }
+  const { token, amount, q, pct } = await quoteDexSellGeneric();
+  const ok = await openRows('确认 DEX 卖出', [
+    ['Token', short(token)],
+    ['卖出比例', pct + '%'],
+    ['卖出数量', amount + ' 枚'],
+    ['预计得到', String(q.quote?.toCoinAmount || '—') + ' BNB'],
+    ['方式', 'BAW market-order · 卖出所得直接是 BNB'],
+  ], '⚠️ 真实链上交易；如果报价变化或流动性不足，订单可能失败，不会自动重试。', skip);
+  if (!ok) { log('已取消'); return; }
+  const j = await bridge('/api/dex-sell', {
+    method: 'POST',
+    body: JSON.stringify({ token, amount, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    const em = errDetail(j.error);
+    log(`DEX 卖出失败：${em}`, 'bad');
+    if (j.orderId) log(`订单 ${j.orderId} · 状态 ${j.status || '—'}`, 'bad');
+    throw new Error(`DEX 卖出失败：${em}`);
+  }
+  log(`DEX 卖出成功（${pct}%）：${j.order.fromTokenActualQty || amount} → ${j.order.toTokenActualQty} BNB`, 'ok');
+  logLink(`DEX 卖出交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+}
+
+/* ---------- Gang 卖出 → GANG → BNB ---------- */
+async function gangSell(skip = false) {
+  const token = $('#gangToken').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token)) throw new Error('Gang 代币 CA 格式不对');
+  const pct = Number(gangSellPct);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 100) throw new Error('卖出比例需要 1–100 的整数');
+  const q = await bridge('/api/gang/sell/quote', {
+    method: 'POST',
+    body: JSON.stringify({ token, pct, ...tradeOptions() }),
+  });
+  if (!q.ok) throw new Error(q.error || 'Gang 卖出报价失败');
+  $('#gangSellSum').innerHTML =
+    `<span>卖出 <b>${pct}%</b> · <b>${esc(q.tokensIn)}</b> ${esc(q.symbol)}</span>
+     <span>预计得到 <b>${esc(q.gangOut)} ${esc(q.quote || 'GANG')}</b></span>
+     <span>最少 <b>${esc(q.minGangOut)} ${esc(q.quote || 'GANG')}</b></span>
+     <span>再到账 BNB</span>`;
+  const ok = await openRows(`确认 Gang 卖出（${pct}%）`, [
+    ['Token', short(token)],
+    ['卖出比例', pct + '%'],
+    ['卖出数量', q.tokensIn + ' ' + q.symbol],
+    ['预计得到', q.gangOut + ' ' + (q.quote || 'GANG')],
+    ['最少接受', q.minGangOut + ' ' + (q.quote || 'GANG')],
+    ['执行', 'approve → sell → ' + (q.quote || 'GANG') + '→BNB（3 笔交易）'],
+  ], '⚠️ 卖出会得到计价币，然后自动换成 BNB。若 Binance App 要求确认，请在 App 确认，面板会等待；若 sell 成功但换 BNB 失败，计价币会留在钱包并明确提示，不会自动重试。', skip);
+  if (!ok) { log('已取消'); return; }
+
+  const j = await bridge('/api/gang/sell', {
+    method: 'POST',
+    body: JSON.stringify({ token, pct, ...tradeOptions() }),
+  });
+  if (!j.ok) {
+    if (j.busy) {
+      const msg = gangBusyMessage(j, '卖出');
+      log(msg, 'warn');
+      throw new Error(msg);
+    }
+    const em = errDetail(j.error);
+    if (j.gangReceived) {
+      const msg = `已卖出 ${pct}%（${j.soldTokens || ''}），得到 ${j.gangReceived} ${j.quoteSymbol || 'GANG'}，但换 BNB 失败：${em}`;
+      log(msg, 'bad');
+      throw new Error(msg);
+    }
+    log(`Gang 卖出失败：${em}`, 'bad');
+    throw new Error(`Gang 卖出失败：${em}`);
+  }
+  log(`Gang 卖出成功（${pct}%）：${j.soldTokens} ${j.symbol} → ${j.gangReceived} ${j.quoteSymbol || 'GANG'} → ${j.bnbReceived} BNB`, 'ok');
+  if (j.sellTxHash) logLink(`Gang 卖出交易 ${short(j.sellTxHash)}`, 'https://bscscan.com/tx/' + j.sellTxHash);
+  if (j.swapTxHash) logLink(`换 BNB 交易 ${short(j.swapTxHash)}`, 'https://bscscan.com/tx/' + j.swapTxHash);
+}
+
+
+async function bridgePreview(to, data, label, value = 0n) {
+  log(`${label}：本地桥模拟中…`);
+  const j = await bridge('/api/send', { method: 'POST', body: JSON.stringify({ to, data, value: value.toString(), previewOnly: true }) });
+  if (!j.ok) throw new Error(bridgeErr(j.error, `${label} 模拟失败`));
+  for (const b of j.preview.balanceChanges || []) {
+    const ti = (j.preview.tokenInfos || {})[String(b.contractAddress).toLowerCase()];
+    log(`  模拟变动：${b.change > 0 ? '+' : ''}${fmt(b.change, ti ? ti.decimals : 18)} ${ti ? ti.symbol : ''}`, 'warn');
+  }
+  for (const r of j.preview.risks || []) log(`  风险：${r.title} — ${r.description}`, 'bad');
+  log(`${label}：模拟通过（未发送）`, 'ok');
+  return j.preview;
+}
+
+async function applyPk() {
+  const pk = document.querySelector('#pk').value.trim();
+  if (!/^0x[0-9a-fA-F]{64}$/.test(pk)) throw new Error('私钥格式不对（0x + 64 位十六进制）');
+  const j = await bridge('/api/addr', { method: 'POST', body: JSON.stringify({ privateKey: pk }) });
+  if (!j.ok) throw new Error((j.error && j.error.message) || '私钥无效');
+  state.pk = pk;
+  state.sigMode = 'key';
+  state.account = j.address;
+  setPill(document.querySelector('#walletPill'), short(j.address), 'on');
+  setPill(document.querySelector('#sessionPill'), 'local key', 'on');
+  setPill(document.querySelector('#chainPill'), 'chain 56', 'on');
+  for (const id of ['#btnBuy', '#btnSell', '#btnFmBuy', '#btnFmSell', '#btnFmDexSell', '#btnDexSell', '#btnGangSell']) document.querySelector(id).disabled = false;
+  log('本地私钥签名就绪：' + j.address, 'ok');
+  log('私钥只在本页内存 + 本机桥里使用，不落盘、不写日志，刷新即清空', 'warn');
+  await refreshBalances().catch(() => {});
+  if (!state.info && document.querySelector('#ca').value.trim()) {
+    try { await resolve(); } catch (e) { log('自动解析失败：' + e.message, 'bad'); }
+  }
+  startPolling();
+}
+async function bridgeSend(to, data, label, value = 0n, retryable = true) {
+  const t0 = Date.now();
+  const useKey = state.sigMode === 'key';
+  if (useKey && !state.pk) throw new Error('本地私钥模式还没填私钥');
+  log(`${label}：${useKey ? '本地私钥签名直发' : '提交给 Agentic 桥'}…`);
+  const j = useKey
+    ? await bridge('/api/send-key', { method: 'POST', body: JSON.stringify({ to, data, value: value.toString(), privateKey: state.pk }) })
+    : await bridge('/api/send', { method: 'POST', body: JSON.stringify({ to, data, value: value.toString() }) });
+  if (!j.ok) {
+    const hint = retryable ? '行情可能已经变了，可直接再点一次重试' : '请查看错误；内盘已关闭/迁移时不要重复重试';
+    log(`${label} 失败（${((Date.now() - t0) / 1000).toFixed(1)}s）：${hint}`, 'bad');
+    throw new Error(bridgeErr(j.error, `${label} 失败`));
+  }
+  if (j.requireConfirmation || (j.result && j.result.status === 'PENDING_CONFIRMATION')) {
+    log(`${label}：等待币安 App 确认（orderId=${j.result && j.result.orderId}）`, 'warn');
+    throw new Error('需要在币安 App 里确认，本页无法自动完成');
+  }
+  const hash = (j.result && j.result.txHash) || j.hash;
+  if (!hash) throw new Error(`${label}：未拿到 txHash`);
+  log(`${label}：已广播（${((Date.now() - t0) / 1000).toFixed(1)}s）`, 'warn');
+  logLink(`${label}：${hash.slice(0, 10)}…`, 'https://bscscan.com/tx/' + hash);
+  let rc;
+  try {
+    rc = await P.waitReceipt(hash);
+  } catch (e) {
+    e.txHash = hash;
+    throw e;
+  }
+  if (!rc.ok) {
+    log(`${label}：链上回滚，交易已上链但执行失败`, 'bad');
+    const e = new Error(`${label} 链上回滚：${hash}`);
+    e.txHash = hash;
+    e.reverted = true;
+    throw e;
+  }
+  log(`${label}：确认 block ${rc.blockNumber} · 总耗时 ${((Date.now() - t0) / 1000).toFixed(1)}s`, 'ok');
+  return { hash, rc };
+}
+
+/* ---------- wallet ---------- */
+function setPill(el, text, cls) {
+  el.className = 'pill ' + (cls || '');
+  el.innerHTML = `<i></i>${esc(text)}`;
+}
+async function connect() {
+  if (document.querySelector('#sigMode').value === 'key') { await applyPk(); return; }
+  log('连接本地桥…');
+  const j = await bridge('/api/health');
+  if (!j.ok) throw new Error('桥不通：' + JSON.stringify(j.error));
+  state.account = j.wallet;
+  state.session = j.session;
+  setPill($('#walletPill'), short(j.wallet), 'on');
+  setPill($('#sessionPill'), 'session ' + j.session, j.session === 'CONNECTED' ? 'on' : 'off');
+  setPill($('#chainPill'), 'chain ' + j.chain, 'on');
+  $('#btnBuy').disabled = false;
+  $('#btnSell').disabled = false;
+  log(`Agentic 钱包：${j.wallet}`, 'ok');
+  log(`baw CLI ${j.cliVersion} · 会话 ${j.session}`, j.session === 'CONNECTED' ? 'ok' : 'bad');
+  if (j.session !== 'CONNECTED') log('会话不是 CONNECTED，签名会失败：先跑 `baw auth signin`', 'bad');
+  await refreshBalances().catch((e) => log('余额读取失败：' + e.message, 'bad'));
+  if (!state.info && $('#ca').value.trim()) {
+    try { await resolve(); } catch (e) { log('自动解析失败：' + (e.message || e), 'bad'); }
+  }
+  startPolling();
+}
+
+async function refreshBalances() {
+  if (!state.account) return;
+  const bnb = await P.nativeBalance(state.account);
+  let quote = null;
+  if (state.info) quote = state.info.native ? bnb : await P.erc20Balance(state.info.quote, state.account);
+  state.bal = { bnb, quote };
+  renderBalances();
+}
+function renderBalances() {
+  const box = document.getElementById('balBox');
+  if (!box || !state.bal) return;
+  const { bnb, quote } = state.bal;
+  const gasBad = bnb < 500000000000000n;
+  box.innerHTML = state.info && state.info.native
+    ? kv('钱包 BNB（本金 + gas）', `${fmt(bnb, 18)} BNB`, gasBad ? '<small class="bad">gas 可能不够</small>' : '')
+    : `${kv('钱包 BNB（gas）', `${fmt(bnb, 18)} BNB`, gasBad ? '<small class="bad">gas 可能不足</small>' : '')}
+       ${kv('钱包 ' + (state.info ? state.info.quoteSym : 'QUOTE'), quote == null ? '—' : `${fmt(quote, state.info.decimals)} ${state.info.quoteSym}`)}`;
+}
+
+/* ---------- resolve ---------- */
+async function resolve() {
+  const ca = $('#ca').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(ca)) throw new Error('CA 格式不对（需要 0x + 40 位十六进制）');
+  if (!state.account) throw new Error('先点「连接」——Probe 读数需要 from=你的 Agentic 地址');
+  state.venue = null;
+  $('#unifiedTradePanel').style.display = 'none';
+  log('解析：' + ca);
+  let info = null;
+  const fourPrefetch = P.fourMemeInfo(ca).catch(() => null);
+  const gangPrefetch = bridge('/api/gang/detect', {
+    method: 'POST',
+    body: JSON.stringify({ token: ca, wallet: state.account }),
+  }).catch((e) => ({ ok: false, error: e.message || String(e) }));
+  try {
+    info = await P.resolveToken(ca, state.account);
+  } catch (e) {
+    if (/没有注册 Probe|没有绑定 Market/.test(e.message)) {
+      const fm = await fourPrefetch;
+      if (fm) {
+        const sym = await P.erc20Symbol(ca);
+        state.info = null;
+        state.fm = { token: ca.toLowerCase(), symbol: sym || 'TOKEN', ...fm };
+        const fmNative = !fm.quote || fm.quote.toLowerCase() === P.WBNB.toLowerCase();
+        state.fmPayMode = fmNative ? 'quote' : 'bnb';
+        state.fmSwapQuote = null;
+        $('#tokenInfo').innerHTML = '';
+        renderFm();
+        log(`识别为 four.meme v2 盘：${sym || '(未命名)'} · status=${fm.status}`, 'ok');
+        setUnifiedVenue('four', sym || state.fm.symbol, state.fm.isNative ? 'BNB' : state.fm.quoteSym);
+        loadTokenOverview(ca).catch(() => {});
+        return null;
+      }
+      state.info = null;
+      state.fm = null;
+      $('#tokenInfo').innerHTML = '';
+      $('#fmCard').style.display = 'none';
+      $('#posCard').style.display = 'none';
+      $('#probeTrade').style.display = 'none';
+      // 不是 Portal / four.meme：尝试 Gang Launchpad，再尝试普通 DEX。
+      let gangErr = '';
+      let dexErr = '';
+      try {
+        const g = await gangPrefetch;
+        if (g.ok) {
+          $('#gangToken').value = ca;
+          selectUnifiedTradeTab('gang');
+          log(`识别为 Gang Launchpad：${g.symbol} · 计价 ${g.quote || 'GANG'} · 进度 ${g.progressPct}%`, 'ok');
+          setUnifiedVenue('gang', g.symbol, g.quote || 'GANG');
+          loadTokenOverview(ca).catch(() => {});
+          return null;
+        }
+        gangErr = errDetail(g.error);
+      } catch (e) { gangErr = e.message || String(e); }
+      try {
+        const d = await bridge('/api/dex-buy/quote', {
+          method: 'POST',
+          body: JSON.stringify({ toToken: ca, amount: '0.001' }),
+        });
+        if (d.ok) {
+          $('#dexBuyCa').value = ca;
+          selectUnifiedTradeTab('dex');
+          log(`识别为普通 DEX 代币：${d.quote?.toCoinSymbol || short(ca)}`, 'ok');
+          setUnifiedVenue('dex', d.quote?.toCoinSymbol || short(ca), 'BNB');
+          loadTokenOverview(ca).catch(() => {});
+          return null;
+        }
+        dexErr = errDetail(d.error);
+      } catch (e) { dexErr = e.message || String(e); }
+      if (/no liquidity|No liquidity/i.test(dexErr)) {
+        throw new Error(`该代币没有可用的 DEX 流动性/交易对（${dexErr}），当前无法买入；这不是解析错误。`);
+      }
+      throw new Error(`没有检测到可用买入路由${gangErr || dexErr ? '：' + [gangErr, dexErr].filter(Boolean).join('；') : ''}。`);
+    }
+    throw e;
+  }
+  state.fm = null;
+  $('#fmCard').style.display = 'none';
+  $('#probeTrade').style.display = '';
+  const st = await P.readStatus(info.probe, state.account);
+  const quoteSym = info.native ? 'BNB' : ((await P.erc20Symbol(info.quote)) || 'QUOTE');
+  let tokenSym = null;
+  try { tokenSym = await P.erc20Symbol(ca); } catch { /* 未部署或非标准 ERC20 */ }
+  state.info = { ...info, ...st, quoteSym, tokenSym };
+  state.payMode = info.native ? 'quote' : 'bnb';
+  setUnifiedVenue('portal', tokenSym || short(ca), quoteSym);
+  localStorage.setItem('baw.ca', ca);
+  renderToken();
+  renderPosition();
+  await refreshBalances();
+  log(`解析完成：PHASE=${st.status.PHASE} BUY_OK=${st.status.BUY_OK} SELL_OK=${st.pos.SELL_OK}`, 'ok');
+  loadTokenOverview(ca).catch(() => {});
+  scheduleEstimate();
+  return state.info;
+}
+
+function renderToken() {
+  const i = state.info;
+  if (!i) return;
+  const st = i.status;
+  const phaseWarn = st.PHASE !== '1'
+    ? `<div class="hint" style="color:var(--warn)">PHASE ${st.PHASE}：内盘已关闭${st.PHASE === '3' ? '（已发射，需到 DEX 交易）' : ''}，买入会被拒绝。</div>`
+    : '';
+  $('#tokenInfo').innerHTML = [
+    kvCopy('Market', i.market),
+    kvCopy('Probe', i.probe),
+    kv('代币', i.tokenSym ? `${i.tokenSym} <small>${short(i.token)}</small>` : `<small>未部署（内盘阶段）</small>`),
+    kv('计价', `${i.quoteSym} <small>${i.decimals} 位${i.native ? ' · 原生' : ''}</small>`),
+    kv('状态', `PHASE ${st.PHASE} <small>BUY_OK ${st.BUY_OK ?? '—'} / SELL_OK ${i.pos.SELL_OK ?? '—'}</small>`),
+    `<div id="balBox" style="display:contents"></div>`,
+  ].join('') + phaseWarn;
+  renderBuyMode();
+  $('#posCard').style.display = '';
+  selectUnifiedTradeTab('portal');
+}
+
+function renderPosition() {
+  const i = state.info;
+  if (!i) return;
+  const held = BigInt(i.pos.HELD_SHARES || '0');
+  const full = i.pos.FULL_SELL_RAW ?? i.pos.FULL_SELL_WEI ?? '0';
+  const room = BigInt(i.cap.ROOM_SHARES || '0');
+  const limit = BigInt(i.cap.LIMIT_SHARES || '0');
+  const soldPct = limit > 0n ? Number(((limit - room) * 10000n) / limit) / 100 : 0;
+
+  $('#posGrid').innerHTML = [
+    kv('我的份额', fmt(held, 18)),
+    kv('现在全卖约得', `${fmt(full, i.decimals, 8)} ${i.quoteSym}`),
+    kv('剩余可买', `${fmt(room, 18)} <small>份</small>`),
+    kv('市场 ID', String(i.cap.ID ?? '—')),
+  ].join('');
+  $('#poolBar').style.width = soldPct.toFixed(2) + '%';
+  $('#poolLeft').textContent = `已售 ${soldPct.toFixed(2)}%`;
+  $('#poolRight').textContent = `上限 ${fmt(limit, 18, 0)} 份`;
+}
+
+/* ---------- estimates ---------- */
+let estTimer = null;
+function scheduleEstimate() {
+  clearTimeout(estTimer);
+  estTimer = setTimeout(() => {
+    if ($('#paneBuy').style.display !== 'none') updateBuyEstimate().catch(() => {});
+    else updateSellEstimate().catch(() => {});
+  }, 320);
+}
+
+let buyEstSeq = 0;
+let quoteCtl = null;
+
+async function fetchSwapQuote(amount, toToken = state.info && state.info.quote) {
+  if (quoteCtl) quoteCtl.abort();
+  quoteCtl = new AbortController();
+  return bridge('/api/swap/quote', {
+    method: 'POST',
+    signal: quoteCtl.signal,
+    body: JSON.stringify({ toToken, amount }),
+  });
+}
+
+async function updateBuyEstimate() {
+  const i = state.info, raw = $('#buyAmount').value;
+  const seq = ++buyEstSeq;
+  const auto = isAutoSwap();
+
+  if (!i || !raw) {
+    $('#buySum').innerHTML = '<span>输入金额后显示预计成交</span>';
+    if (auto) $('#swapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+    return;
+  }
+
+  if (auto) {
+    let bnbRaw;
+    try { bnbRaw = P.parseUnitsStrict(raw, 18); }
+    catch {
+      $('#swapEstimate').innerHTML = '<span class="bad">BNB 金额格式不对</span>';
+      $('#buySum').innerHTML = '<span class="bad">金额格式不对</span>';
+      return;
+    }
+    state.swapQuote = null;
+    $('#swapEstimate').textContent = '≈ 正在获取换汇报价…';
+    $('#buySum').innerHTML = '<span>先取换汇报价，再估算可买份额…</span>';
+
+    let j;
+    try {
+      j = await fetchSwapQuote(raw);
+    } catch (e) {
+      if (seq !== buyEstSeq || !isAutoSwap()) return;
+      const em = errDetail(e);
+      $('#swapEstimate').innerHTML = `<span class="bad">≈ 报价失败：${esc(em)}</span>`;
+      $('#buySum').innerHTML = `<span class="bad">换汇报价失败：${esc(em)}</span>`;
+      return;
+    }
+    if (seq !== buyEstSeq || !isAutoSwap()) return;
+    if (!j.ok) {
+      const em = errDetail(j.error);
+      $('#swapEstimate').innerHTML = `<span class="bad">≈ 报价失败：${esc(em)}</span>`;
+      $('#buySum').innerHTML = `<span class="bad">换汇报价失败：${esc(em)}</span>`;
+      return;
+    }
+
+    let gross;
+    try {
+      gross = P.parseUnitsStrict(String(j.quote && j.quote.toCoinAmount), i.decimals);
+    } catch {
+      if (seq !== buyEstSeq || !isAutoSwap()) return;
+      $('#swapEstimate').innerHTML = '<span class="bad">≈ 报价返回的计价币数量不可读</span>';
+      $('#buySum').innerHTML = '<span class="bad">报价返回的计价币数量不可读</span>';
+      return;
+    }
+    if (seq !== buyEstSeq || !isAutoSwap()) return;
+    state.swapQuote = { raw: gross, text: fmt(gross, i.decimals, 8), quote: j.quote };
+    $('#swapEstimate').innerHTML =
+      `≈ <b>${fmt(gross, i.decimals, 8)} ${esc(i.quoteSym)}</b> <span>（baw 实时报价，实际以成交为准）</span>`;
+
+    try {
+      const q = await P.probe(i.probe, P.SEL.quoteBuyProbe, [gross], state.account);
+      if (seq !== buyEstSeq || !isAutoSwap()) return;
+      const shares = q.SHARES ?? q.BUY_SHARES;
+      const fee = q.FEE_RAW ?? q.FEE_WEI ?? '0';
+      const acc = q.ACCEPT_RAW ?? q.ACCEPT_WEI ?? '0';
+      const refund = q.REFUND_RAW ?? q.REFUND_WEI ?? '0';
+      $('#buySum').innerHTML =
+        `<span>≈ 换得 <b>${fmt(gross, i.decimals, 8)}</b> ${esc(i.quoteSym)}</span>
+         <span>按报价可买 <b>${fmt(shares, 18)}</b> 份</span>
+         <span>手续费 <b>${fmt(fee, i.decimals)}</b> ${esc(i.quoteSym)}</span>` +
+        (BigInt(refund) > 0n ? `<span>预计退款 <b>${fmt(refund, i.decimals)}</b></span>` : '');
+    } catch (e) {
+      if (seq !== buyEstSeq || !isAutoSwap()) return;
+      $('#buySum').innerHTML =
+        `<span>≈ 换得 <b>${fmt(gross, i.decimals, 8)}</b> ${esc(i.quoteSym)}</span>
+         <span class="bad">按报价检查买入失败：${esc(e.message)}</span>`;
+    }
+    return;
+  }
+
+  // 直接输入计价币：保持原有流程。
+  if (isAutoSwap()) return;
+  if (state.swapQuote) state.swapQuote = null;
+  let gross;
+  try { gross = P.parseUnitsStrict(raw, i.decimals); }
+  catch { $('#buySum').innerHTML = '<span class="bad">金额格式不对</span>'; return; }
+  try {
+    const q = await P.probe(i.probe, P.SEL.quoteBuyProbe, [gross], state.account);
+    if (seq !== buyEstSeq || isAutoSwap()) return;
+    const shares = q.SHARES ?? q.BUY_SHARES;
+    const fee = q.FEE_RAW ?? q.FEE_WEI ?? '0';
+    const refund = q.REFUND_RAW ?? q.REFUND_WEI ?? '0';
+    $('#buySum').innerHTML =
+      `<span>预计得到 <b>${fmt(shares, 18)}</b> 份</span>
+       <span>手续费 <b>${fmt(fee, i.decimals)}</b> ${esc(i.quoteSym)}</span>
+       <span>实扣 <b>${fmt(q.ACCEPT_RAW ?? q.ACCEPT_WEI ?? '0', i.decimals)}</b> ${esc(i.quoteSym)}</span>` +
+      (BigInt(refund) > 0n ? `<span>预计退款 <b>${fmt(refund, i.decimals)}</b></span>` : '');
+  } catch (e) {
+    if (seq !== buyEstSeq || isAutoSwap()) return;
+    $('#buySum').innerHTML = `<span class="bad">${esc(e.message)}</span>`;
+  }
+}
+
+async function updateSellEstimate() {
+  const i = state.info;
+  if (!i) { $('#sellSum').innerHTML = '<span>解析代币后显示预计到账</span>'; return; }
+  const pct = Number($('#sellPct').value), slip = Number($('#sellSlip').value);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 100) { $('#sellSum').innerHTML = '<span class="bad">比例需为 1–100</span>'; return; }
+  if (!Number.isInteger(slip) || slip < 0 || slip > 10000) { $('#sellSum').innerHTML = '<span class="bad">滑点需为 0–10000</span>'; return; }
+  try {
+    const plan = await P.planSell(i.probe, pct * 100, slip, state.account);
+    const out = plan.OUT_RAW ?? plan.OUT_WEI, min = plan.MIN_RAW ?? plan.MIN_WEI;
+    $('#sellSum').innerHTML =
+      `<span>卖出 <b>${fmt(plan.SHARES, 18)}</b> 份</span>
+       <span>预计到账 <b>${fmt(out, i.decimals, 8)}</b> ${i.quoteSym}</span>
+       <span>最少接受 <b>${fmt(min, i.decimals, 8)}</b></span>`;
+  } catch (e) {
+    $('#sellSum').innerHTML = `<span class="bad">${esc(e.message)}</span>`;
+  }
+}
+
+/* ---------- 发送前自检 ---------- */
+async function preflight(needGas = true) {
+  if (!state.account) throw new Error('先连接 Agentic 钱包');
+  if (state.session && state.session !== 'CONNECTED') {
+    throw new Error('Agentic 钱包会话已过期，先在终端跑 `baw auth signin` 重新登录');
+  }
+  if (needGas) {
+    const bnb = await P.nativeBalance(state.account);
+    if (bnb < 300000000000000n) throw new Error('BNB 不足 0.0003，gas 可能不够');
+  }
+}
+/* ---------- prepare / execute ---------- */
+async function prepareBuyForGross(gross, amountText) {
+  await preflight();
+  const info = state.info;
+  if (!info) throw new Error('先解析代币');
+  const slip = Number($('#buySlip').value);
+  if (!Number.isInteger(slip) || slip < 0 || slip > 10000) throw new Error('滑点必须是 0–10000 的整数 bps');
+  if (gross <= 0n) throw new Error('买入金额必须大于 0');
+
+  if (info.native) {
+    const bnb = await P.nativeBalance(state.account);
+    if (bnb < gross + GAS_RESERVE) throw new Error(`BNB 不足：需要 ${fmt(gross, 18)} + gas 预留 0.002，当前 ${fmt(bnb, 18)}`);
+  } else {
+    const fund = await P.readFunding(info.probe, gross, state.account);
+    log(`资金探测：BALANCE_OK=${fund.BALANCE_OK} ALLOWANCE_OK=${fund.ALLOWANCE_OK}`);
+    if (fund.BALANCE_OK !== '1') throw new Error(`${info.quoteSym} 余额不足（需要 ${amountText}）`);
+  }
+  const plan = await P.planBuy(info.probe, gross, slip, state.account);
+  return { kind: 'buy', gross, amount: amountText, slip, plan, info };
+}
+
+async function prepareBuy() {
+  const info = state.info || (await resolve());
+  if (isAutoSwap()) throw new Error('BNB 自动换汇模式请走换汇买入流程');
+  const amount = $('#buyAmount').value;
+  if (!amount) throw new Error('先填买入金额（可点 10%/25%/50%/全部）');
+  const gross = P.parseUnitsStrict(amount, info.decimals);
+  return prepareBuyForGross(gross, amount);
+}
+
+async function prepareSell() {
+  await preflight();
+  const info = state.info || (await resolve());
+  const pct = Number($('#sellPct').value), slip = Number($('#sellSlip').value);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 100) throw new Error('比例必须是 1–100 的整数');
+  if (!Number.isInteger(slip) || slip < 0 || slip > 10000) throw new Error('滑点必须是 0–10000 的整数 bps');
+  const pos = await P.probe(info.probe, P.SEL.positionProbe, [], state.account);
+  if (pos.PHASE !== '1') throw new Error('PHASE != 1，内盘不可卖');
+  if (pos.SELL_OK !== '1') throw new Error('SELL_OK != 1，卖出被禁用');
+  if (BigInt(pos.HELD_SHARES) === 0n) throw new Error('份额为 0');
+  const plan = await P.planSell(info.probe, pct * 100, slip, state.account);
+  return { kind: 'sell', pct, slip, plan, info };
+}
+
+async function sendBuy(p) {
+  const info = p.info;
+  const data = info.native ? P.buyNativeData(info.market, p.plan.MIN_SHARES) : P.buyData(info.market, p.gross, p.plan.MIN_SHARES);
+  const value = info.native ? p.gross : 0n;
+
+  if (!info.native) {
+    const allow = await P.erc20Allowance(info.quote, state.account, info.market);
+    if (allow < p.gross) {
+      await bridgeSend(info.quote, P.approveData(info.market, p.gross), '授权');
+    }
+  } else {
+    log(`原生池：本次支付 ${p.amount} BNB`);
+  }
+  return bridgeSend(P.PORTAL, data, '买入', value);
+}
+
+async function executeBuy(p) {
+  const sent = await sendBuy(p);
+  afterTrade().catch(() => {});
+  return sent;
+}
+
+async function executeSell(p) {
+  const min = p.plan.MIN_RAW ?? p.plan.MIN_WEI;
+  await bridgeSend(P.PORTAL, P.sellData(p.info.market, p.pct * 100, min), '卖出');
+  afterTrade().catch(() => {});
+}
+
+async function afterTrade() {
+  if (!state.info) return;
+  const st = await P.readStatus(state.info.probe, state.account);
+  state.info = { ...state.info, ...st };
+  renderToken();
+  await refreshBalances();
+  renderPosition();
+  scheduleEstimate();
+}
+
+/* ---------- confirm ---------- */
+function openConfirm(p, skip = false) {
+  if (skip) return true;
+  const i = p.info, isBuy = p.kind === 'buy';
+  const dlg = $('#confirmDlg');
+  const dw = $('#dlgWarn');
+
+  if (isBuy && p.autoSwap) {
+    $('#dlgTitle').textContent = '确认换汇并买入';
+    $('#dlgBody').innerHTML = `
+      <div class="dlg-row"><span>Market</span><b class="mono">${short(i.market)}</b></div>
+      <div class="dlg-row"><span>换汇</span><b>${esc(p.bnbText)} BNB → ≈ ${esc(p.expectedText)} ${esc(i.quoteSym)}</b></div>
+      <div class="dlg-row"><span>执行顺序</span><b>换汇 → 等收据 → 刷新余额 → 买入</b></div>
+      <div class="dlg-row"><span>预计买入</span><b>${fmt(p.plan.BUY_SHARES, 18)} 份</b></div>
+      <div class="dlg-row"><span>最少接受</span><b>${fmt(p.plan.MIN_SHARES, 18)} 份</b></div>
+      <div class="dlg-row"><span>买入滑点</span><b>${p.slip} bps (${(p.slip / 100).toFixed(2)}%)</b></div>`;
+    dw.textContent = '⚠️ 换汇按 baw 实时价成交，实际到账可能和 ≈ 报价不同；到账后会全部用于买入，不再二次确认。若换汇成功但买入失败，会明确提示「已换得 X，未买入」，不会自动重试。';
+    dw.style.display = '';
+    dlg.showModal();
+    return new Promise((resolve) => {
+      const ok = $('#dlgOk'), cancel = $('#dlgCancel');
+      const done = (v) => { ok.onclick = null; cancel.onclick = null; dlg.oncancel = null; dlg.close(); resolve(v); };
+      ok.onclick = () => done(true);
+      cancel.onclick = () => done(false);
+      dlg.oncancel = () => done(false);
+    });
+  }
+
+  const amountLine = isBuy ? `${fmt(p.gross, i.decimals, 8)} ${i.quoteSym}` : `${fmt(p.plan.SHARES, 18)} 份（${p.pct}%）`;
+  const est = isBuy ? `${fmt(p.plan.BUY_SHARES, 18)} 份` : `${fmt(p.plan.OUT_RAW ?? p.plan.OUT_WEI, i.decimals, 8)} ${i.quoteSym}`;
+  const min = isBuy ? `${fmt(p.plan.MIN_SHARES, 18)} 份` : `${fmt(p.plan.MIN_RAW ?? p.plan.MIN_WEI, i.decimals, 8)} ${i.quoteSym}`;
+
+  $('#dlgTitle').textContent = isBuy ? '确认买入' : '确认卖出';
+  $('#dlgBody').innerHTML = `
+    <div class="dlg-row"><span>Market</span><b class="mono">${short(i.market)}</b></div>
+    <div class="dlg-row"><span>池子</span><b>${i.quoteSym}${i.native ? '（原生）' : ''}</b></div>
+    <div class="dlg-row"><span>${isBuy ? '支付' : '卖出'}</span><b>${amountLine}</b></div>
+    <div class="dlg-row"><span>预计得到</span><b>${est}</b></div>
+    <div class="dlg-row"><span>最少接受</span><b>${min}</b></div>
+    <div class="dlg-row"><span>滑点</span><b>${p.slip} bps (${(p.slip / 100).toFixed(2)}%)</b></div>`;
+  if (!isBuy && p.autoBnb && !i.native) {
+    dw.textContent = '⚠️ 卖出所得会自动换成 BNB；如果自动换汇失败，计价币会留在钱包，不会自动重试。';
+    dw.style.display = '';
+  } else {
+    dw.textContent = '';
+    dw.style.display = 'none';
+  }
+  dlg.showModal();
+  return new Promise((resolve) => {
+    const ok = $('#dlgOk'), cancel = $('#dlgCancel');
+    const done = (v) => { ok.onclick = null; cancel.onclick = null; dlg.oncancel = null; dlg.close(); resolve(v); };
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    dlg.oncancel = () => done(false);
+  });
+}
+
+/* ---------- actions ---------- */
+async function onBuy(skip = false) {
+  if (!state.info) await resolve();
+  if (isAutoSwap()) return onBuyWithBnb(skip);
+  const p = await prepareBuy();
+  if ($('#dryRun').checked) {
+    const data = p.info.native ? P.buyNativeData(p.info.market, p.plan.MIN_SHARES) : P.buyData(p.info.market, p.gross, p.plan.MIN_SHARES);
+    await bridgePreview(P.PORTAL, data, '买入预演', p.info.native ? p.gross : 0n);
+    return;
+  }
+  if (!(await openConfirm(p, skip))) { log('已取消'); return; }
+  const fresh = skip ? p : await prepareBuy();
+  await executeBuy(fresh);
+  log('买入完成', 'ok');
+}
+
+async function runBnbSwap(bnbText, quote, quoteSym, refresh, decimals = 18) {
+  let before;
+  try {
+    before = await P.erc20Balance(quote, state.account);
+  } catch (e) {
+    throw new Error(`读取换汇前 ${quoteSym} 余额失败（未换汇）：${e.message}`);
+  }
+
+  log(`换汇：${bnbText} BNB → ${quoteSym}（baw market-order swap）…`, 'warn');
+  let swapRes;
+  try {
+    swapRes = await bridge('/api/swap', {
+      method: 'POST',
+      body: JSON.stringify({ toToken: quote, amount: bnbText, ...tradeOptions() }),
+    });
+  } catch (e) {
+    const em = errDetail(e);
+    log(`换汇失败，未买入：${em}`, 'bad');
+    throw new Error(`换汇失败，未买入：${em}`);
+  }
+  if (!swapRes.ok) {
+    const em = errDetail(swapRes.error);
+    log(`换汇失败，未买入：${em}`, 'bad');
+    if (swapRes.error) log(`CLI/订单原样返回：${JSON.stringify(swapRes.error)}`, 'bad');
+    if (swapRes.orderId) log(`订单 ${swapRes.orderId} · 状态 ${swapRes.status || '—'}`, 'bad');
+    throw new Error(`换汇失败，未买入：${em}`);
+  }
+
+  const orderId = swapRes.orderId;
+  const txHash = swapRes.txHash;
+  if (!orderId || !txHash) {
+    throw new Error(`换汇返回成功但缺少 orderId/txHash，未买入：${JSON.stringify(swapRes).slice(0, 300)}`);
+  }
+  log(`换汇成功：order ${orderId} · 收据 block ${swapRes.receipt && swapRes.receipt.blockNumber}`, 'ok');
+  logLink(`换汇交易 ${short(txHash)}`, 'https://bscscan.com/tx/' + txHash);
+
+  // /api/swap 已等到链上收据；再刷新余额，用实际到账数量买入。
+  try {
+    await refresh();
+  } catch (e) {
+    throw new Error(`换汇已成功（order ${orderId}），但刷新余额失败，未买入：${e.message}`);
+  }
+  let after = null;
+  try { after = await P.erc20Balance(quote, state.account); }
+  catch { /* 用订单里的实际到账兜底 */ }
+  let received = after != null && after > before ? after - before : null;
+  if (received == null && swapRes.order && swapRes.order.toTokenActualQty) {
+    try { received = P.parseUnitsStrict(String(swapRes.order.toTokenActualQty), decimals); }
+    catch { /* 余额差额仍是主依据 */ }
+  }
+  if (received == null || received <= 0n) {
+    const msg = `换汇已成功（order ${orderId}），但未检测到 ${quoteSym} 到账，未买入`;
+    log(msg, 'bad');
+    throw new Error(msg);
+  }
+  const recvText = fmt(received, decimals, 8);
+  log(`余额已刷新：已换得 ${recvText} ${quoteSym}，准备买入…`, 'ok');
+  return { swapRes, received, recvText };
+}
+
+async function onBuyWithBnb(skip = false) {
+  const info = state.info;
+  if (!info || info.native || !info.quote) throw new Error('当前池子不是 ERC20 计价，不能自动换汇');
+  await preflight();
+
+  const bnbText = $('#buyAmount').value.trim();
+  if (!bnbText) throw new Error('先填 BNB 数量（可点 10%/25%/50%/全部）');
+  const bnbRaw = P.parseUnitsStrict(bnbText, 18);
+  const bnbBal = await P.nativeBalance(state.account);
+  if (bnbBal < bnbRaw + GAS_RESERVE) {
+    throw new Error(`BNB 不足：换汇 ${bnbText} + gas 预留 0.002，当前 ${fmt(bnbBal, 18)}`);
+  }
+  const slip = Number($('#buySlip').value);
+  if (!Number.isInteger(slip) || slip < 0 || slip > 10000) throw new Error('滑点必须是 0–10000 的整数 bps');
+
+  log(`换汇报价：${bnbText} BNB → ${info.quoteSym}…`);
+  let quoteRes;
+  try {
+    quoteRes = await fetchSwapQuote(bnbText);
+  } catch (e) {
+    throw new Error(`换汇报价失败（未换汇、未买入）：${errDetail(e)}`);
+  }
+  if (!quoteRes.ok) {
+    const em = errDetail(quoteRes.error);
+    log(`换汇报价失败：${em}`, 'bad');
+    throw new Error(`换汇报价失败（未换汇、未买入）：${em}`);
+  }
+  const expectedRaw = P.parseUnitsStrict(String(quoteRes.quote && quoteRes.quote.toCoinAmount), info.decimals);
+  const expectedText = fmt(expectedRaw, info.decimals, 8);
+
+  // 换汇前先确认这个盘现在能买，避免换完才发现 PHASE/BUY_OK 不允许。
+  let plan;
+  try {
+    plan = await P.planBuy(info.probe, expectedRaw, slip, state.account);
+  } catch (e) {
+    throw new Error(`换汇前检查买入失败（未换汇、未买入）：${e.message}`);
+  }
+
+  const p = { kind: 'buy', autoSwap: true, bnbText, bnbRaw, expectedRaw, expectedText, plan, slip, info };
+  if ($('#dryRun').checked) {
+    log(`预演：${bnbText} BNB ≈ ${expectedText} ${info.quoteSym}；按报价可买 ${fmt(plan.BUY_SHARES, 18)} 份（未换汇、未买入）`, 'ok');
+    return;
+  }
+  if (!(await openConfirm(p, skip))) { log('已取消'); return; }
+
+  const { received, recvText } = await runBnbSwap(bnbText, info.quote, info.quoteSym, refreshBalances, info.decimals);
+
+  let fresh;
+  try {
+    fresh = await prepareBuyForGross(received, P.formatUnits(received, info.decimals));
+  } catch (e) {
+    const msg = `已换得 ${recvText} ${info.quoteSym}，未买入：${e.message}`;
+    log(msg, 'bad');
+    log('换汇所得仍在钱包；本页不会自动重试。', 'warn');
+    await refreshBalances().catch(() => {});
+    throw new Error(msg);
+  }
+
+  let sent;
+  try {
+    sent = await sendBuy(fresh);
+  } catch (e) {
+    const em = errDetail(e);
+    let msg;
+    if (e && e.reverted) {
+      const what = /授权/.test(String(e.message)) ? '授权交易回滚' : '买入交易回滚';
+      msg = `已换得 ${recvText} ${info.quoteSym}，未买入（${what}${e.txHash ? '：' + short(e.txHash) : ''}）`;
+    } else if (e && e.txHash) {
+      msg = `已换得 ${recvText} ${info.quoteSym}，买入结果未确认（tx ${short(e.txHash)}）：${em}`;
+    } else {
+      msg = `已换得 ${recvText} ${info.quoteSym}，未买入：${em}`;
+    }
+    log(msg, 'bad');
+    log('换汇所得仍在钱包；本页不会自动重试。', 'warn');
+    await refreshBalances().catch(() => {});
+    throw new Error(msg);
+  }
+
+  log(`买入已上链：${short(sent.hash)}`, 'ok');
+  logLink(`买入交易 ${short(sent.hash)}`, 'https://bscscan.com/tx/' + sent.hash);
+  try {
+    await afterTrade();
+  } catch (e) {
+    log(`买入已上链，但刷新持仓失败：${e.message}`, 'warn');
+  }
+  log(`换汇 + 买入完成：${bnbText} BNB → ${recvText} ${info.quoteSym} → 买入`, 'ok');
+}
+
+async function onSell(skip = false) {
+  const p = await prepareSell();
+  p.autoBnb = true;
+  if ($('#dryRun').checked) {
+    await bridgePreview(P.PORTAL, P.sellData(p.info.market, p.pct * 100, p.plan.MIN_RAW ?? p.plan.MIN_WEI), '卖出预演');
+    return;
+  }
+  if (!(await openConfirm(p, skip))) { log('已取消'); return; }
+  const fresh = skip ? p : await prepareSell();
+  fresh.autoBnb = true;
+  let beforeQuote = null;
+  if (!fresh.info.native) beforeQuote = await P.erc20Balance(fresh.info.quote, state.account);
+  await executeSell(fresh);
+  log('卖出完成', 'ok');
+  if (!fresh.info.native && beforeQuote != null) {
+    await swapQuoteProceedsToBnb(fresh.info.quote, beforeQuote, fresh.info.decimals, 'Portal 卖出');
+  }
+}
+
+/* ---------- four.meme v2（flap 风格面板） ---------- */
+function renderFm() {
+  const f = state.fm;
+  if (!f) return;
+  $('#fmCard').style.display = '';
+  $('#posCard').style.display = 'none';
+  $('#probeTrade').style.display = 'none';
+  $('#fmSym').textContent = '$' + (f.symbol || 'TOKEN');
+  f.isNative = !f.quote || f.quote.toLowerCase() === P.WBNB.toLowerCase();
+  f.quoteSym = f.isNative ? 'BNB' : (f.quoteSym || 'QUOTE');
+  $('#fmAvatar').textContent = (f.symbol || 'T').slice(0, 1).toUpperCase();
+  $('#fmCa').textContent = short(f.token);
+  $('#fmCopy').onclick = () => copyText(f.token, 'CA');
+  $('#fmName').textContent = f.name || '';
+  renderFmPayMode();
+  const rawTs = f.createdAt ? Number(f.createdAt) : 0;
+  const created = rawTs ? new Date(rawTs > 1e12 ? rawTs : rawTs * 1000) : null;
+  $('#fmInfo').innerHTML = [
+    ['合约地址', short(f.token)],
+    ['路由', short(f.router)],
+    ['状态', 'status ' + f.status + (f.status === 1 ? '（已登记）' : '')],
+    ['最大供应量', fmt(f.totalSupply, 18, 0)],
+    ['曲线储备', fmt(f.sold, 18, 0)],
+    ['创建者', f.creator ? short(f.creator) : '—'],
+    ['创建时间', created && !isNaN(created) ? created.toLocaleString('zh-CN', { hour12: false }) : '—'],
+  ].map(([k, v]) => `<div class="fm-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+  refreshFmBalances().catch(() => {});
+  selectUnifiedTradeTab('four');
+}
+
+let fmEstSeq = 0;
+let fmEstTimer = null;
+
+function renderFmPayMode() {
+  const f = state.fm;
+  if (!f) return;
+  const canSwap = !!(f.quote && !f.isNative);
+  if (!canSwap) state.fmPayMode = 'quote';
+  const auto = canSwap && state.fmPayMode === 'bnb';
+
+  $('#fmPayModes').style.display = canSwap ? 'flex' : 'none';
+  $('#fmPayBnb').classList.toggle('active', auto);
+  $('#fmPayQuote').classList.toggle('active', !auto);
+  $('#fmSwapBox').style.display = auto ? '' : 'none';
+  const qsym = f.quoteSym && f.quoteSym !== 'QUOTE' ? f.quoteSym : '计价币';
+  $('#fmPayQuote').textContent = f.isNative ? '直接输入 BNB' : `直接输入 ${qsym}`;
+  $('#btnFmBuy').textContent = auto ? '换汇并买入' : '买入';
+
+  if (auto) {
+    $('#fmSwapPair').textContent = `BNB → ${qsym}`;
+    if (state.bal && state.bal.bnb != null) $('#fmBnbBal').textContent = fmt(state.bal.bnb, 18, 5);
+    $('#fmBuyUnit').textContent = 'BNB';
+    $('#fmBalUnit').textContent = 'BNB';
+    if (!state.fmSwapQuote) $('#fmSwapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+  } else {
+    state.fmSwapQuote = null;
+    const bal = f.isNative ? (state.bal ? state.bal.bnb : null) : state.quoteBal;
+    $('#fmBuyUnit').textContent = f.isNative ? 'BNB' : f.quoteSym;
+    $('#fmBalUnit').textContent = f.isNative ? 'BNB' : f.quoteSym;
+    if (bal != null) $('#fmBnbBal').textContent = fmt(bal, f.isNative ? 18 : (f.quoteDecimals || 18), 5);
+    $('#fmSwapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+  }
+}
+
+function setFmPayMode(mode) {
+  if (state.busy || !state.fm) return;
+  const canSwap = !!(state.fm.quote && !state.fm.isNative);
+  const next = canSwap && mode === 'bnb' ? 'bnb' : 'quote';
+  if (next !== state.fmPayMode) {
+    state.fmPayMode = next;
+    state.fmSwapQuote = null;
+    $('#fmBuyAmount').value = '';
+    $('#fmSwapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+  }
+  renderFmPayMode();
+  scheduleFmEstimate();
+}
+
+function scheduleFmEstimate() {
+  clearTimeout(fmEstTimer);
+  fmEstTimer = setTimeout(() => { updateFmSwapEstimate().catch(() => {}); }, 320);
+}
+
+async function updateFmSwapEstimate() {
+  const f = state.fm;
+  const seq = ++fmEstSeq;
+  const auto = !!(f && !f.isNative && state.fmPayMode === 'bnb');
+  if (!auto) {
+    state.fmSwapQuote = null;
+    return;
+  }
+  const raw = $('#fmBuyAmount').value.trim();
+  if (!raw) {
+    state.fmSwapQuote = null;
+    $('#fmSwapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+    return;
+  }
+  try { P.parseUnitsStrict(raw, 18); }
+  catch {
+    state.fmSwapQuote = null;
+    $('#fmSwapEstimate').innerHTML = '<span class="bad">BNB 金额格式不对</span>';
+    return;
+  }
+
+  $('#fmSwapEstimate').textContent = '≈ 正在获取换汇报价…';
+  let j;
+  try {
+    j = await fetchSwapQuote(raw, f.quote);
+  } catch (e) {
+    if (seq !== fmEstSeq || !state.fm || state.fm.isNative || state.fmPayMode !== 'bnb') return;
+    $('#fmSwapEstimate').innerHTML = `<span class="bad">≈ 报价失败：${esc(errDetail(e))}</span>`;
+    return;
+  }
+  if (seq !== fmEstSeq || !state.fm || state.fm.isNative || state.fmPayMode !== 'bnb') return;
+  if (!j.ok) {
+    state.fmSwapQuote = null;
+    $('#fmSwapEstimate').innerHTML = `<span class="bad">≈ 报价失败：${esc(errDetail(j.error))}</span>`;
+    return;
+  }
+  try {
+    const dec = f.quoteDecimals || 18;
+    const gross = P.parseUnitsStrict(String(j.quote && j.quote.toCoinAmount), dec);
+    state.fmSwapQuote = { raw: gross, text: fmt(gross, dec, 8), quote: j.quote };
+    $('#fmSwapEstimate').innerHTML =
+      `≈ <b>${fmt(gross, dec, 8)} ${esc(f.quoteSym)}</b> <span>（baw 实时报价，实际以成交为准）</span>`;
+  } catch {
+    state.fmSwapQuote = null;
+    $('#fmSwapEstimate').innerHTML = '<span class="bad">≈ 报价返回的计价币数量不可读</span>';
+  }
+}
+
+async function refreshFmBalances() {
+  const f = state.fm;
+  if (!f || !state.account) return;
+  const [bnb, tok] = await Promise.all([
+    P.nativeBalance(state.account),
+    P.erc20Balance(f.token, state.account).catch(() => 0n),
+  ]);
+  let quoteBal = bnb;
+  if (!f.isNative) {
+    const sym = await P.erc20Symbol(f.quote).catch(() => null);
+    f.quoteSym = sym || f.quoteSym || 'QUOTE';
+    quoteBal = await P.erc20Balance(f.quote, state.account).catch(() => 0n);
+    if (!f.decimalsRead) {
+      const dec = await P.ethCall(f.quote, P.SEL.decimals).catch(() => null);
+      f.quoteDecimals = dec ? Number(BigInt(dec)) : 18;
+      f.decimalsRead = true;
+    }
+  }
+  $('#fmBuyUnit').textContent = f.isNative ? 'BNB' : f.quoteSym;
+  const bu = document.getElementById('fmBalUnit'); if (bu) bu.textContent = f.isNative ? 'BNB' : f.quoteSym;
+  $('#fmBnbBal').textContent = f.isNative ? fmt(bnb, 18, 5) : fmt(quoteBal, f.quoteDecimals || 18, 5);
+  state.quoteBal = quoteBal;
+  $('#fmTokBal').textContent = fmt(tok, 18, 2);
+  $('#fmTokUnit').textContent = f.symbol || 'TOKEN';
+  $('#fmSellUnit').textContent = f.symbol || 'TOKEN';
+  state.bal = { bnb, quote: quoteBal };
+  state.quoteBal = quoteBal;
+  state.fmTokBal = tok;
+  renderFmPayMode();
+}
+
+function fmTab(which) {
+  const buy = which === 'buy';
+  $('#fmPaneBuy').style.display = buy ? '' : 'none';
+  $('#fmPaneSell').style.display = buy ? 'none' : '';
+  $('#fmTabBuy').classList.toggle('active', buy);
+  $('#fmTabSell').classList.toggle('active', !buy);
+  $('#fmTabSell').classList.toggle('sell', !buy);
+}
+
+function fmQuick(kind, pct) {
+  if (!state.fm) return;
+  if (kind === 'buy') {
+    const f = state.fm;
+    const auto = !f.isNative && state.fmPayMode === 'bnb';
+    const bal = auto
+      ? (state.bal ? state.bal.bnb : null)
+      : (state.quoteBal != null ? state.quoteBal : (state.bal ? state.bal.quote : null));
+    if (bal == null) return;
+    const avail = (auto || f.isNative) ? (bal > GAS_RESERVE ? bal - GAS_RESERVE : 0n) : bal;
+    const dec = (auto || f.isNative) ? 18 : (f.quoteDecimals || 18);
+    $('#fmBuyAmount').value = P.formatUnits((avail * BigInt(pct)) / 100n, dec);
+    if (auto) scheduleFmEstimate();
+  } else {
+    const bal = state.fmTokBal || 0n;
+    $('#fmSellAmount').value = P.formatUnits((bal * BigInt(pct)) / 100n, 18);
+  }
+}
+
+function openRows(title, rows, warn, skip = false) {
+  if (skip) return true;
+  $('#dlgTitle').textContent = title;
+  $('#dlgBody').innerHTML = rows
+    .map(([k, v]) => `<div class="dlg-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`)
+    .join('');
+  const w = $('#dlgWarn');
+  if (warn) { w.textContent = warn; w.style.display = ''; } else { w.style.display = 'none'; }
+  const dlg = $('#confirmDlg');
+  dlg.showModal();
+  return new Promise((resolve) => {
+    const ok = $('#dlgOk'), cancel = $('#dlgCancel');
+    const done = (v) => { ok.onclick = null; cancel.onclick = null; dlg.oncancel = null; dlg.close(); resolve(v); };
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    dlg.oncancel = () => done(false);
+  });
+}
+
+async function fmBuy(skip = false) {
+  await preflight();
+  const f = state.fm;
+  if (!f) throw new Error('先解析 four.meme 代币');
+  const auto = !f.isNative && state.fmPayMode === 'bnb';
+  const amt = $('#fmBuyAmount').value;
+  if (!amt) throw new Error(auto ? '填 BNB 数量' : '填买入数量');
+  const dec = (auto || f.isNative) ? 18 : (f.quoteDecimals || 18);
+  let funds = P.parseUnitsStrict(amt, dec);
+  const minRaw = $('#fmMinOut').value ? P.parseUnitsStrict($('#fmMinOut').value, 18) : 0n;
+  const unit = (auto || f.isNative) ? 'BNB' : (f.quoteSym || 'QUOTE');
+  let expectedText = null;
+
+  if (auto) {
+    const bnb = await P.nativeBalance(state.account);
+    if (bnb < funds + GAS_RESERVE) {
+      throw new Error(`BNB 不足：换汇 ${amt} + gas 预留 0.002，当前 ${fmt(bnb, 18)}`);
+    }
+    log(`换汇报价：${amt} BNB → ${f.quoteSym}…`);
+    let q;
+    try {
+      q = await fetchSwapQuote(amt, f.quote);
+    } catch (e) {
+      throw new Error(`换汇报价失败（未换汇、未买入）：${errDetail(e)}`);
+    }
+    if (!q.ok) throw new Error(`换汇报价失败（未换汇、未买入）：${errDetail(q.error)}`);
+    const qd = f.quoteDecimals || 18;
+    const expected = P.parseUnitsStrict(String(q.quote && q.quote.toCoinAmount), qd);
+    expectedText = fmt(expected, qd, 8);
+  } else if (!f.isNative) {
+    const bal = state.quoteBal || 0n;
+    if (bal < funds) throw new Error(`${unit} 余额不足（需要 ${amt}，当前 ${fmt(bal, dec)}）`);
+  }
+
+  if ($('#dryRun').checked) {
+    if (auto) {
+      log(`预演：${amt} BNB ≈ ${expectedText} ${f.quoteSym}，再买入 four.meme（未换汇、未买入）`, 'ok');
+      return;
+    }
+    const data = P.fourBuyData(f.token, funds, minRaw);
+    await bridgePreview(P.FOUR_ROUTER, data, 'four.meme 买入预演', f.isNative ? funds : 0n);
+    return;
+  }
+
+  const warnParts = [];
+  if (minRaw === 0n) warnParts.push('⚠️ 未设置最小到账：价格剧烈波动或有人夹单时，可能以任意价格成交。');
+  if (auto) warnParts.push('⚠️ 换汇实际到账可能和 ≈ 报价不同；到账后会全部用于买入，不再二次确认。换汇成功但买入失败不会自动重试。');
+  const warnText = warnParts.join(' ');
+
+  const rows = auto
+    ? [
+        ['Token', short(f.token)],
+        ['换汇', `${amt} BNB → ≈ ${expectedText} ${f.quoteSym}`],
+        ['执行顺序', '换汇 → 等收据 → 刷新余额 → 买入'],
+        ['最少得到', minRaw ? fmt(minRaw, 18) + ' ' + (f.symbol || '') : '不设下限'],
+      ]
+    : [
+        ['Token', short(f.token)],
+        ['支付', amt + ' ' + unit],
+        ['最少得到', minRaw ? fmt(minRaw, 18) + ' ' + (f.symbol || '') : '不设下限'],
+      ];
+  const ok = await openRows(auto ? '确认换汇并买入（four.meme）' : '确认 four.meme 买入', rows, warnText, skip);
+  if (!ok) { log('已取消'); return; }
+
+  let recvText = null;
+  if (auto) {
+    const sw = await runBnbSwap(amt, f.quote, f.quoteSym, refreshFmBalances, f.quoteDecimals || 18);
+    funds = sw.received;
+    recvText = sw.recvText;
+  }
+
+  const data = P.fourBuyData(f.token, funds, minRaw);
+  try {
+    if (!f.isNative) {
+      const allow = await P.erc20Allowance(f.quote, state.account, P.FOUR_ROUTER);
+      if (allow < funds) await bridgeSend(f.quote, P.approveData(P.FOUR_ROUTER, funds), '授权 ' + f.quoteSym);
+    }
+    await bridgeSend(P.FOUR_ROUTER, data, 'four.meme 买入', f.isNative ? funds : 0n);
+  } catch (e) {
+    if (auto) {
+      let msg;
+      if (e && e.reverted) {
+        const what = /授权/.test(String(e.message)) ? '授权交易回滚' : '买入交易回滚';
+        msg = `已换得 ${recvText} ${f.quoteSym}，未买入（${what}${e.txHash ? '：' + short(e.txHash) : ''}）`;
+      } else if (e && e.txHash) {
+        msg = `已换得 ${recvText} ${f.quoteSym}，买入结果未确认（tx ${short(e.txHash)}）：${errDetail(e)}`;
+      } else {
+        msg = `已换得 ${recvText} ${f.quoteSym}，未买入：${errDetail(e)}`;
+      }
+      log(msg, 'bad');
+      log('换汇所得仍在钱包；本页不会自动重试。', 'warn');
+      await refreshFmBalances().catch(() => {});
+      throw new Error(msg);
+    }
+    throw e;
+  }
+  log('four.meme 买入完成', 'ok');
+  await refreshFmBalances().catch(() => {});
+}
+
+async function fmSell(skip = false) {
+  await preflight();
+  const f = state.fm;
+  if (!f) throw new Error('先解析 four.meme 代币');
+  const bal = await P.erc20Balance(f.token, state.account);
+  const raw = $('#fmSellAmount').value;
+  const amount = raw ? P.parseUnitsStrict(raw, 18) : bal;
+  if (amount === 0n) throw new Error('代币余额为 0');
+  if (amount > bal) throw new Error('超过余额 ' + fmt(bal, 18));
+  const dec = f.isNative ? 18 : (f.quoteDecimals || 18);
+  const minFunds = $('#fmMinFunds').value ? P.parseUnitsStrict($('#fmMinFunds').value, dec) : 0n;
+  const data = P.fourSellData(f.token, amount, minFunds);
+  const unit = f.isNative ? 'BNB' : (f.quoteSym || 'QUOTE');
+
+  if ($('#dryRun').checked) {
+    await bridgePreview(P.FOUR_ROUTER, data, 'four.meme 卖出预演');
+    return;
+  }
+  let beforeQuote = null;
+  if (!f.isNative) beforeQuote = await P.erc20Balance(f.quote, state.account);
+  if (!(await openRows('确认 four.meme 卖出', [
+    ['Token', short(f.token)],
+    ['卖出', fmt(amount, 18) + ' ' + (f.symbol || '')],
+    ['最少得到', minFunds ? fmt(minFunds, dec) + ' ' + unit : '不设下限'],
+  ], f.isNative ? undefined : '卖出所得会自动换成 BNB；如果自动换汇失败，计价币会留在钱包，不会自动重试。', skip))) { log('已取消'); return; }
+
+  const allow = await P.erc20Allowance(f.token, state.account, P.FOUR_ROUTER);
+  try {
+    if (allow < amount) await bridgeSend(f.token, P.approveData(P.FOUR_ROUTER, amount), '授权路由');
+    await bridgeSend(P.FOUR_ROUTER, data, 'four.meme 卖出', 0n, false);
+  } catch (e) {
+    log(`内盘卖出失败：${errDetail(e)}`, 'bad');
+    log('如果这是已迁移/关闭内盘的币，内盘路由会一直回滚；请改用下方的「DEX 市价卖出」。', 'warn');
+    throw e;
+  }
+  log('four.meme 卖出完成', 'ok');
+  await refreshFmBalances().catch(() => {});
+  if (!f.isNative && beforeQuote != null) {
+    await swapQuoteProceedsToBnb(f.quote, beforeQuote, f.quoteDecimals || 18, 'four.meme 卖出');
+  }
+}
+
+async function dexSell() {
+  await preflight();
+  const f = state.fm;
+  if (!f) throw new Error('先解析 four.meme 代币');
+  const bal = await P.erc20Balance(f.token, state.account);
+  if (bal === 0n) throw new Error(`${f.symbol || '代币'} 余额为 0，无法卖出`);
+  const raw = $('#fmSellAmount').value;
+  const amount = raw ? P.parseUnitsStrict(raw, 18) : bal;
+  if (amount > bal) throw new Error('超过余额 ' + fmt(bal, 18));
+  if (amount === 0n) throw new Error('卖出数量必须大于 0');
+  const amountText = P.formatUnits(amount, 18);
+
+  log(`DEX 卖出报价：${amountText} ${f.symbol || ''} → BNB…`);
+  let qr;
+  try {
+    qr = await bridge('/api/dex-sell/quote', {
+      method: 'POST',
+      body: JSON.stringify({ token: f.token, amount: amountText }),
+    });
+  } catch (e) {
+    throw new Error(`DEX 卖出报价失败（未卖出）：${errDetail(e)}`);
+  }
+  if (!qr.ok) {
+    const em = errDetail(qr.error);
+    log(`DEX 卖出报价失败：${em}`, 'bad');
+    throw new Error(`DEX 卖出报价失败（未卖出）：${em}`);
+  }
+
+  const expectedRaw = P.parseUnitsStrict(String(qr.quote && qr.quote.toCoinAmount), 18);
+  const expectedText = fmt(expectedRaw, 18, 8);
+  if ($('#dryRun').checked) {
+    log(`预演：${amountText} ${f.symbol || ''} ≈ ${expectedText} BNB（DEX，未发送）`, 'ok');
+    return;
+  }
+
+  const ok = await openRows('确认 DEX 市价卖出', [
+    ['Token', short(f.token)],
+    ['卖出', `${amountText} ${f.symbol || ''}`],
+    ['预计到账', `≈ ${expectedText} BNB`],
+    ['方式', 'BAW market-order · 失败不自动重试'],
+  ], '⚠️ 真实链上交易，价格以实际成交为准，不可撤销。');
+  if (!ok) { log('已取消'); return; }
+
+  let j;
+  try {
+    j = await bridge('/api/dex-sell', {
+      method: 'POST',
+      body: JSON.stringify({ token: f.token, amount: amountText }),
+    });
+  } catch (e) {
+    const em = errDetail(e);
+    log(`DEX 卖出失败：${em}`, 'bad');
+    throw new Error(`DEX 卖出失败：${em}`);
+  }
+  if (!j.ok) {
+    const em = errDetail(j.error);
+    log(`DEX 卖出失败：${em}`, 'bad');
+    if (j.error) log(`CLI/订单原样返回：${JSON.stringify(j.error)}`, 'bad');
+    if (j.orderId) log(`订单 ${j.orderId} · 状态 ${j.status || '—'}`, 'bad');
+    throw new Error(`DEX 卖出失败：${em}`);
+  }
+
+  const actual = j.order && j.order.toTokenActualQty ? `实际到账 ${j.order.toTokenActualQty} BNB` : '已 FINISHED';
+  log(`DEX 卖出成功：order ${j.orderId} · ${actual}`, 'ok');
+  if (j.txHash) logLink(`DEX 卖出交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+  await refreshFmBalances().catch(() => {});
+}
+
+let pollTimer = null;
+function startPolling() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    if (state.busy || !state.account) return;
+    try {
+      if (state.fm) {
+        const fm = await P.fourMemeInfo(state.fm.token);
+        if (!fm) return;
+        if (fm.status !== state.fm.status) log('路由状态变化：' + fm.status, 'warn');
+        state.fm = { ...state.fm, ...fm };
+        renderFm();
+      } else if (state.info && state.info.probe) {
+        const st = await P.readStatus(state.info.probe, state.account);
+        const changed = !state.info.status || st.status.PHASE !== state.info.status.PHASE ||
+          st.status.BUY_OK !== state.info.status.BUY_OK || st.pos.SELL_OK !== state.info.pos.SELL_OK;
+        state.info = { ...state.info, ...st };
+        renderPosition();
+        if (changed) log(`状态变化：PHASE ${st.status.PHASE} · BUY_OK ${st.status.BUY_OK} · SELL_OK ${st.pos.SELL_OK}`, st.status.BUY_OK === '1' ? 'ok' : 'warn');
+        await refreshBalances();
+      }
+    } catch { /* 静默重试 */ }
+  }, 9000);
+}
+async function diag() {
+  log('===== 自检 =====');  try {
+    const j = await bridge('/api/health');
+    log(`桥：OK · CLI ${j.cliVersion} · 会话 ${j.session}`, 'ok');
+    log(`钱包：${j.wallet} · 链 ${j.chain}`);
+  } catch (e) { log('桥：失败 ' + e.message, 'bad'); }
+  try { const b = await P.rpc('eth_blockNumber', []); log('RPC：OK block=' + BigInt(b), 'ok'); }
+  catch (e) { log('RPC：失败 ' + e.message, 'bad'); }
+  log('模式：' + ($('#dryRun').checked ? '预演（不发交易）' : '实盘'));
+}
+
+/* ---------- 统一买卖面板 ---------- */
+const UNIFIED_LABELS = { portal: 'Portal / 内盘', four: 'four.meme / Flap', dex: 'DEX', gang: 'Gang Launchpad' };
+
+function selectUnifiedTradeTab() {
+  // 旧面板只作为隐藏执行层保留，不再显示 Tab
+  document.querySelectorAll('[data-uni-pane]').forEach((p) => { p.style.display = 'none'; });
+}
+
+function setUnifiedVenue(venue, symbol, quote) {
+  if (!UNIFIED_LABELS[venue]) return;
+  state.venue = venue;
+  const panel = $('#unifiedTradePanel');
+  if (!panel) return;
+  panel.style.display = '';
+  $('#uniToken').textContent = symbol || 'TOKEN';
+  $('#uniVenue').textContent = UNIFIED_LABELS[venue];
+  $('#uniQuote').textContent = quote || 'BNB';
+  const pill = $('#unifiedPill');
+  if (pill) {
+    pill.className = 'pill on';
+    pill.innerHTML = `<i></i>${UNIFIED_LABELS[venue]}`;
+  }
+  for (const id of ['#twStatBuy', '#twStatSell', '#twStatPnl']) {
+    if ($(id)) { $(id).textContent = '—'; $(id).className = ''; }
+  }
+  refreshTradeWidget().catch(() => {});
+}
+
+function setupUnifiedTrade() {
+  const host = $('#unifiedResolveHost');
+  const pane = (name) => document.querySelector(`[data-uni-pane="${name}"]`);
+  if (!host || !pane('portal')) return;
+  host.appendChild($('#resolveCard'));
+  pane('portal').appendChild($('#posCard'));
+  pane('portal').appendChild($('#probeTrade'));
+  pane('four').appendChild($('#fmCard'));
+  pane('dex').appendChild($('#dexBuyCard'));
+  pane('gang').appendChild($('#gangBuyCard'));
+  selectUnifiedTradeTab();
+  $('#unifiedTradePanel').style.display = 'none';
+  const pill = $('#unifiedPill');
+  if (pill) { pill.className = 'pill off'; pill.innerHTML = '<i></i>自动识别'; }
+}
+
+let quickTrade = localStorage.getItem('baw.quickTrade') !== '0';
+
+function renderQuickTrade() {
+  const b = $('#btnTwQuick');
+  if (!b) return;
+  b.textContent = `快速：${quickTrade ? '开' : '关'}`;
+  b.classList.toggle('on', quickTrade);
+  b.title = quickTrade
+    ? '快速交易开启：点买入/卖出数值立即发送，不再弹二次确认。BAW App 仍可能要求确认。'
+    : '快速交易关闭：每次交易前弹确认框。';
+}
+
+function setQuickTrade(on, silent = false) {
+  quickTrade = !!on;
+  localStorage.setItem('baw.quickTrade', quickTrade ? '1' : '0');
+  if (quickTrade && $('#dryRun').checked) {
+    $('#dryRun').checked = false;
+    localStorage.setItem('baw.dry', '0');
+    syncMode();
+    if (!silent) log('快速交易开启：预演已关闭，点数值会直接发送交易', 'warn');
+  }
+  renderQuickTrade();
+}
+
+let tradeSlipBps = (() => {
+  const v = Number(localStorage.getItem('baw.tradeSlipBps'));
+  return Number.isFinite(v) && v >= 10 && v <= 10000 ? v : 100;
+})();
+let tradeGasLevel = ['LOW', 'MEDIUM', 'HIGH'].includes(localStorage.getItem('baw.gasLevel'))
+  ? localStorage.getItem('baw.gasLevel') : 'MEDIUM';
+let tradeMev = localStorage.getItem('baw.mev') !== '0';
+
+function tradeOptions() {
+  return {
+    slippage: String(tradeSlipBps / 100),
+    gasLevel: tradeGasLevel,
+    mev: tradeMev,
+  };
+}
+
+function renderTradeSettings() {
+  const pct = tradeSlipBps / 100;
+  $$('[data-slip-bps]').forEach((b) => b.classList.toggle('active', Number(b.dataset.slipBps) === tradeSlipBps));
+  if ($('#twSlipCustom')) {
+    const preset = [100, 300, 500].includes(tradeSlipBps);
+    $('#twSlipCustom').value = preset ? '' : String(pct);
+    $('#twSlipCustom').placeholder = preset ? '自定义%' : pct + '%';
+  }
+  if ($('#twGasLevel')) $('#twGasLevel').value = tradeGasLevel;
+  if ($('#twMev')) $('#twMev').checked = tradeMev;
+  if ($('#buySlip')) $('#buySlip').value = String(tradeSlipBps);
+  if ($('#sellSlip')) $('#sellSlip').value = String(tradeSlipBps);
+  if ($('#uniSlip')) $('#uniSlip').textContent = pct.toFixed(2) + '%';
+  if ($('#uniSellSlip')) $('#uniSellSlip').textContent = pct.toFixed(2) + '%';
+}
+
+function setTradeSlip(bps) {
+  const n = Math.round(Number(bps));
+  if (!Number.isFinite(n) || n < 10 || n > 10000) { renderTradeSettings(); return; }
+  tradeSlipBps = n;
+  localStorage.setItem('baw.tradeSlipBps', String(n));
+  renderTradeSettings();
+}
+
+async function uniBuy(amountArg, skip = quickTrade) {
+  if (!state.venue) throw new Error('先解析代币');
+  const raw = String(amountArg ?? '').trim();
+  if (!raw) throw new Error('填买入 BNB 数量');
+  const amount = P.parseUnitsStrict(raw, 18);
+  if (amount <= 0n) throw new Error('买入数量必须大于 0');
+  const ca = $('#ca').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(ca)) throw new Error('CA 格式不对');
+
+  if (state.venue === 'portal') {
+    if (!state.info) throw new Error('Portal 代币状态未准备好');
+    const st = state.info.status || {};
+    if (String(st.PHASE) === '3' || String(st.BUY_OK) === '0') {
+      log('内盘不可买（PHASE ' + (st.PHASE || '?') + ' / BUY_OK=0），自动改走 DEX 市价买入', 'warn');
+      $('#dexBuyCa').value = ca;
+      $('#dexBuyAmount').value = raw;
+      await dexBuy(skip);
+      refreshTradeWidget().catch(() => {});
+      return;
+    }
+    $('#buyAmount').value = raw;
+    state.payMode = state.info.native ? 'quote' : 'bnb';
+    try {
+      await onBuy(skip);
+    } catch (e) {
+      const msg = String(e?.message || e);
+      if (/MARKET_NOT_OPEN|内盘已关闭/.test(msg)) {
+        log('内盘关闭（MARKET_NOT_OPEN），自动改走 DEX 市价买入', 'warn');
+        $('#dexBuyCa').value = ca;
+        $('#dexBuyAmount').value = raw;
+        await dexBuy(skip);
+        refreshTradeWidget().catch(() => {});
+        return;
+      }
+      throw e;
+    }
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'four') {
+    if (!state.fm) throw new Error('four.meme 代币状态未准备好');
+    $('#fmBuyAmount').value = raw;
+    state.fmPayMode = state.fm.isNative ? 'quote' : 'bnb';
+    try {
+      await fmBuy(skip);
+    } catch (e) {
+      const msg = String(e?.message || e);
+      const canFallback = state.fm.isNative && !/App|确认|取消|拒绝|余额|不足|滑点|超时|网络|reject/i.test(msg);
+      if (canFallback) {
+        log('four.meme 内盘买入失败，自动改走 DEX 市价买入：' + msg, 'warn');
+        $('#dexBuyCa').value = ca;
+        $('#dexBuyAmount').value = raw;
+        await dexBuy(skip);
+        refreshTradeWidget().catch(() => {});
+        return;
+      }
+      throw e;
+    }
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'dex') {
+    $('#dexBuyCa').value = ca;
+    $('#dexBuyAmount').value = raw;
+    await dexBuy(skip);
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'gang') {
+    $('#gangToken').value = ca;
+    $('#gangBnb').value = raw;
+    await buyGang(skip);
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  throw new Error('未识别的交易路由');
+}
+
+async function sellPortalPhase3(pct, skip = false) {
+  const info = state.info;
+  if (!info) throw new Error('Portal 状态未准备好');
+  await preflight();
+  const st = await P.readStatus(info.probe, state.account);
+  const shares = BigInt(st.pos.HELD_SHARES || '0');
+  let tokenBal = await P.erc20Balance(info.token, state.account);
+  if (shares === 0n && tokenBal === 0n) {
+    throw new Error(`当前没有可卖持仓：份额 0，${info.tokenSym || '代币'} 余额 0；可能已经 claim 并卖出`);
+  }
+  if (shares > 0n && tokenBal === 0n) {
+    const ok = await openRows('PHASE 3：先 claim 份额', [
+      ['Market', short(info.market)],
+      ['份额', fmt(shares, 18)],
+      ['代币', info.tokenSym || short(info.token)],
+      ['执行', 'claim 份额 → 变成 ERC20 → DEX 卖出'],
+    ], '⚠️ 这个盘 PHASE 3，内盘卖出已关闭。必须先 claim 成 ERC20，再走 DEX 卖出；claim 需要一笔链上交易和 gas。', skip);
+    if (!ok) { log('已取消'); return; }
+    log('PHASE 3：先 claim 份额…', 'warn');
+    await bridgeSend(info.market, '0x4e71d92d', 'Market claim', 0n, false);
+    await new Promise((r) => setTimeout(r, 1200));
+    tokenBal = await P.erc20Balance(info.token, state.account);
+    if (tokenBal === 0n) throw new Error('claim 完成但代币余额仍为 0，请刷新持仓后再试');
+  }
+  dexSellPct = pct;
+  $('#dexBuyCa').value = info.token;
+  log(`PHASE 3：claim 后按 ${pct}% 走 DEX 卖出`, 'warn');
+  await dexSellGeneric(skip);
+}
+
+async function uniSell(pctArg, skip = quickTrade) {
+  if (!state.venue) throw new Error('先解析代币');
+  const pct = Number(pctArg);
+  if (!Number.isInteger(pct) || pct < 1 || pct > 100) throw new Error('卖出比例需要 1–100 的整数');
+  const ca = $('#ca').value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(ca)) throw new Error('CA 格式不对');
+
+  if (state.venue === 'portal') {
+    if (!state.info) throw new Error('Portal 代币状态未准备好');
+    if (state.info.status.PHASE === '3') {
+      await sellPortalPhase3(pct, skip);
+      refreshTradeWidget().catch(() => {});
+      return;
+    }
+    $('#sellPct').value = String(pct);
+    await onSell(skip);
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'four') {
+    if (!state.fm) throw new Error('four.meme 代币状态未准备好');
+    const bal = await P.erc20Balance(state.fm.token, state.account);
+    if (bal === 0n) throw new Error('代币余额为 0');
+    const raw = (bal * BigInt(pct)) / 100n;
+    if (raw <= 0n) throw new Error('该比例下卖出数量为 0');
+    $('#fmSellAmount').value = P.formatUnits(raw, 18);
+    try {
+      await fmSell(skip);
+    } catch (e) {
+      const msg = String(e?.message || e);
+      const canFallback = state.fm.isNative && !/App|确认|取消|拒绝|余额|不足|滑点|超时|网络|reject|已卖出|txHash/i.test(msg);
+      if (canFallback) {
+        log('four.meme 内盘卖出失败，自动改走 DEX 市价卖出：' + msg, 'warn');
+        dexSellPct = pct;
+        $('#dexBuyCa').value = ca;
+        await dexSellGeneric(skip);
+        refreshTradeWidget().catch(() => {});
+        return;
+      }
+      throw e;
+    }
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'dex') {
+    dexSellPct = pct;
+    $('#dexBuyCa').value = ca;
+    await dexSellGeneric(skip);
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  if (state.venue === 'gang') {
+    gangSellPct = pct;
+    $('#gangToken').value = ca;
+    await gangSell(skip);
+    refreshTradeWidget().catch(() => {});
+    return;
+  }
+  throw new Error('未识别的交易路由');
+}
+
+/* ---------- 交易面板预设数值（可编辑，持久化） ---------- */
+const DEFAULT_BUY_PRESETS = [0.0001, 0.1, 0.5, 1, 0.05, 0.25, 2, 5];
+const DEFAULT_SELL_PRESETS = [10, 25, 50, 100, 0, 0, 0, 0];
+let buyPresets = loadPreset('baw.ui.buyPresets', DEFAULT_BUY_PRESETS);
+let sellPresets = loadPreset('baw.ui.sellPresets', DEFAULT_SELL_PRESETS);
+
+function loadPreset(key, def) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [...def];
+    const a = JSON.parse(raw);
+    if (!Array.isArray(a) || a.length !== 8) return [...def];
+    return a.map((v, i) => Number.isFinite(Number(v)) ? Number(v) : def[i]);
+  } catch { return [...def]; }
+}
+
+function savePreset(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch { /* */ } }
+
+function fmtPreset(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '0';
+  return String(Number(n.toFixed(6)));
+}
+
+function renderPresetGrids() {
+  const buy = $('#uniBuyGrid');
+  const sell = $('#uniSellGrid');
+  if (!buy || !sell) return;
+  buy.innerHTML = buyPresets.map((v, i) =>
+    `<button class="tw-btn buy" type="button" data-buyidx="${i}" ${Number(v) > 0 ? '' : 'disabled'}>${esc(fmtPreset(v))}</button>`
+  ).join('');
+  sell.innerHTML = sellPresets.map((v, i) =>
+    `<button class="tw-btn sell" type="button" data-sellidx="${i}" ${Number(v) > 0 ? '' : 'disabled'}>${esc(fmtPreset(v))}%</button>`
+  ).join('');
+  buy.querySelectorAll('[data-buyidx]').forEach((b) => {
+    b.onclick = () => {
+      const v = buyPresets[Number(b.dataset.buyidx)];
+      if (Number(v) > 0) guard(() => uniBuy(v))();
+    };
+  });
+  sell.querySelectorAll('[data-sellidx]').forEach((b) => {
+    b.onclick = () => {
+      const v = sellPresets[Number(b.dataset.sellidx)];
+      if (Number(v) > 0) guard(() => uniSell(v))();
+    };
+  });
+}
+
+function openPresetEditor() {
+  const panel = $('#twEditPanel');
+  if (!panel) return;
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? '' : 'none';
+  if (!show) return;
+  $('#twBuyInputs').innerHTML = buyPresets.map((v, i) =>
+    `<input type="number" min="0" step="0.0001" data-buyedit="${i}" value="${esc(fmtPreset(v))}" />`
+  ).join('');
+  $('#twSellInputs').innerHTML = sellPresets.map((v, i) =>
+    `<input type="number" min="0" max="100" step="1" data-selledit="${i}" value="${esc(fmtPreset(v))}" />`
+  ).join('');
+}
+
+function savePresetEditor() {
+  const b = [...$$('#twBuyInputs input')].map((x) => Number(x.value));
+  const s = [...$$('#twSellInputs input')].map((x) => Number(x.value));
+  if (b.length !== 8 || s.length !== 8) throw new Error('预设数量不对');
+  if (b.some((v) => !Number.isFinite(v) || v < 0)) throw new Error('买入金额不能为负');
+  if (s.some((v) => !Number.isFinite(v) || v < 0 || v > 100)) throw new Error('卖出比例需要 0–100');
+  buyPresets = b.map((v) => Number(v.toFixed(6)));
+  sellPresets = s.map((v) => Math.round(v));
+  savePreset('baw.ui.buyPresets', buyPresets);
+  savePreset('baw.ui.sellPresets', sellPresets);
+  renderPresetGrids();
+  $('#twEditPanel').style.display = 'none';
+  log('交易预设已保存', 'ok');
+}
+
+async function refreshTradeWidget() {
+  const ca = $('#ca').value.trim();
+  if (!ca || !/^0x[0-9a-fA-F]{40}$/.test(ca) || !state.account) return;
+  try {
+    const [bnb, tok] = await Promise.all([
+      P.nativeBalance(state.account).catch(() => null),
+      P.erc20Balance(ca, state.account).catch(() => null),
+    ]);
+    const bnbText = bnb != null ? fmt(bnb, 18, 4) : '—';
+    const tokText = tok != null ? fmt(tok, 18, 4) : '—';
+    if ($('#uniBnbBal')) $('#uniBnbBal').textContent = bnbText;
+    if ($('#uniBalance')) $('#uniBalance').textContent = tokText;
+    if ($('#uniTokenBal')) $('#uniTokenBal').textContent = tokText;
+    if ($('#twStatBalance')) $('#twStatBalance').textContent = tokText;
+    if ($('#uniSlip')) $('#uniSlip').textContent = (Number($('#buySlip').value || 0) / 100).toFixed(2) + '%';
+    if ($('#uniSellSlip')) $('#uniSellSlip').textContent = (Number($('#sellSlip').value || 0) / 100).toFixed(2) + '%';
+    const dry = $('#dryRun').checked ? '开' : '关';
+    if ($('#uniDry')) $('#uniDry').textContent = dry;
+    if ($('#uniDrySell')) $('#uniDrySell').textContent = dry;
+  } catch { /* ignore */ }
+  loadTokenPnl(ca).catch(() => {});
+}
+
+function fmtBnbNum(v) {
+  if (v == null || !Number.isFinite(Number(v))) return '—';
+  return Number(v).toFixed(6);
+}
+
+function fmtTokenQty(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  if (n >= 1e9) return (n / 1e9).toFixed(4) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(4) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  return n.toFixed(4);
+}
+
+async function estimatePositionValueBnb(ca, balanceText, venue) {
+  const bal = Number(balanceText);
+  if (!Number.isFinite(bal) || bal <= 0) return 0;
+  if (venue === 'gang') {
+    try {
+      const q = await bridge('/api/gang/sell/quote', {
+        method: 'POST',
+        body: JSON.stringify({ token: ca, pct: 100 }),
+      });
+      if (q && q.ok && Number(q.gangOut) > 0) {
+        const quoteAddr = q.quoteAddress || '0x0c6302401aa5325C2E36F170f52C00B1d220B405';
+        const r = await bridge('/api/dex-sell/quote', {
+          method: 'POST',
+          body: JSON.stringify({ token: quoteAddr, amount: String(q.gangOut) }),
+        });
+        if (r && r.ok) {
+          const v = Number(r.quote?.toCoinAmount);
+          if (Number.isFinite(v)) return v;
+        }
+      }
+    } catch { /* fall through */ }
+  }
+  try {
+    const r = await bridge('/api/dex-sell/quote', {
+      method: 'POST',
+      body: JSON.stringify({ token: ca, amount: balanceText }),
+    });
+    if (r && r.ok) {
+      const v = Number(r.quote?.toCoinAmount);
+      if (Number.isFinite(v)) return v;
+    }
+  } catch { /* fall through */ }
+  if (overviewPriceNative) return bal * overviewPriceNative;
+  return null;
+}
+
+async function loadTokenPnl(ca) {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(String(ca || ''))) return;
+  const target = String(ca).toLowerCase();
+  const j = await bridge('/api/token-pnl?ca=' + encodeURIComponent(target) + '&fresh=1&t=' + Date.now());
+  if (!j || !j.ok) return;
+  const buy = Number(j.totalBuyBnb || 0);
+  const sell = Number(j.totalSellBnb || 0);
+  const pnl = Number(j.realizedPnlBnb || 0);
+  if ($('#twStatBuy')) $('#twStatBuy').textContent = buy > 0 ? fmtBnbNum(buy) + ' BNB' : '—';
+  if ($('#twStatSell')) $('#twStatSell').textContent = sell > 0 ? fmtBnbNum(sell) + ' BNB' : '—';
+  if ($('#twStatPnl')) {
+    const el = $('#twStatPnl');
+    const unknown = Number(j.unknownCount || 0);
+    const hasRealized = sell > 0 && unknown === 0;
+    el.textContent = hasRealized ? (pnl >= 0 ? '+' : '') + fmtBnbNum(pnl) + ' BNB' : '—';
+    el.className = hasRealized && pnl > 0 ? 'up' : (hasRealized && pnl < 0 ? 'down' : '');
+    el.title = unknown > 0
+      ? `${unknown} 笔买入成本未知，暂不计算已实现利润`
+      : (j.note || '');
+  }
+  if (j.balanceText && $('#twStatBalance')) $('#twStatBalance').textContent = j.balanceText;
+  if (j.balanceText && $('#uniBalance')) $('#uniBalance').textContent = j.balanceText;
+  if (j.balanceText && $('#uniTokenBal')) $('#uniTokenBal').textContent = j.balanceText;
+
+  const qty = Number(j.balanceText || 0);
+  const costRaw = j.positionCostBnb;
+  const hasCost = costRaw != null && Number.isFinite(Number(costRaw));
+  const cost = hasCost ? Number(costRaw) : null;
+  const hasQty = Number.isFinite(qty) && qty > 0;
+  if ($('#twPosition')) $('#twPosition').style.display = hasQty ? '' : 'none';
+  if ($('#twPosQty')) $('#twPosQty').textContent = hasQty ? fmtTokenQty(qty) : '0';
+  if ($('#twPosCost')) $('#twPosCost').textContent = hasQty && hasCost ? fmtBnbNum(cost) + ' BNB' : (hasQty ? '—' : '0');
+  if ($('#twPosValue')) $('#twPosValue').textContent = hasQty ? '…' : '0';
+  if ($('#twPosPnl')) { $('#twPosPnl').textContent = hasQty ? '…' : '0'; $('#twPosPnl').className = ''; }
+  if (!hasQty) return;
+
+  const value = await estimatePositionValueBnb(target, j.balanceText, state.venue);
+  if ($('#ca').value.trim().toLowerCase() !== target) return;
+  if ($('#twPosValue')) $('#twPosValue').textContent = value == null ? '—' : fmtBnbNum(value) + ' BNB';
+  if ($('#twPosPnl')) {
+    const el = $('#twPosPnl');
+    if (value == null || !hasCost) {
+      el.textContent = '—';
+      el.className = '';
+      el.title = '缺少当前可卖报价或买入成本';
+    } else {
+      const u = value - cost;
+      el.textContent = (u >= 0 ? '+' : '') + fmtBnbNum(u) + ' BNB';
+      el.className = u > 0 ? 'up' : (u < 0 ? 'down' : '');
+      el.title = '当前价值 - 持仓成本（按当前卖出报价估算）';
+    }
+  }
+}
+
+/* ---------- GMGN 风格代币概览 ---------- */
+let overviewCa = null;
+let overviewPriceNative = null;
+
+function fmtUsd(v) {
+  if (v == null || !Number.isFinite(Number(v))) return '—';
+  const n = Number(v);
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+  if (n >= 1) return '$' + n.toFixed(2);
+  return '$' + n.toPrecision(3);
+}
+
+function fmtPrice(v) {
+  if (v == null || !Number.isFinite(Number(v))) return '—';
+  const n = Number(v);
+  if (n >= 1) return '$' + n.toFixed(4);
+  if (n >= 0.01) return '$' + n.toFixed(5);
+  if (n >= 0.0001) return '$' + n.toFixed(7);
+  return '$' + n.toPrecision(4);
+}
+
+function renderTokenOverview(j) {
+  const box = $('#tokenOverview');
+  if (!box) return;
+  if (!j || !j.ok) { box.style.display = 'none'; return; }
+  overviewPriceNative = Number.isFinite(Number(j.priceNative)) && Number(j.priceNative) > 0 ? Number(j.priceNative) : null;
+  box.style.display = '';
+  const sym = j.symbol || 'TOKEN';
+  $('#ovSym').textContent = sym;
+  $('#ovName').textContent = j.name && j.name !== sym ? j.name : '';
+  $('#ovCa').textContent = short(j.ca);
+  $('#ovLaunch').textContent = j.launchpad ? (j.launchpad + ' 发射') : (j.dexId ? j.dexId : '');
+  $('#ovPrice').textContent = fmtPrice(j.priceUsd);
+  const chg = $('#ovChg');
+  if (j.change24h == null) { chg.textContent = '24h —'; chg.className = 'ov-chg'; }
+  else {
+    const v = Number(j.change24h);
+    chg.textContent = `24h ${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+    chg.className = 'ov-chg ' + (v >= 0 ? 'up' : 'down');
+  }
+  const sec = j.security || {};
+  const taxes = j.security ? (Number(sec.buyTaxPct || 0).toFixed(2) + '% / ' + Number(sec.sellTaxPct || 0).toFixed(2) + '%') : '—';
+  const age = j.ageHours == null ? '—' : (j.ageHours < 24 ? j.ageHours.toFixed(1) + 'h' : (j.ageHours / 24).toFixed(1) + 'd');
+  const tx = j.txns24h ? `${j.txns24h.buys || 0} / ${j.txns24h.sells || 0}` : '—';
+  $('#ovGrid').innerHTML = [
+    ['市值', fmtUsd(j.marketCap ?? j.fdv)],
+    ['流动性', fmtUsd(j.liquidityUsd)],
+    ['24h 量', fmtUsd(j.volume24h)],
+    ['持有人', j.security ? String(sec.holderCount ?? '—') : '—'],
+    ['24h 买/卖', tx],
+    ['买/卖税', taxes],
+    ['Top10', j.security ? Number(sec.top10Pct || 0).toFixed(1) + '%' : '—'],
+    ['池龄', age],
+  ].map(([k, v]) => `<div class="ov-cell"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join('');
+
+  const badges = [];
+  if (j.security) {
+    badges.push(sec.honeypot ? ['蜜罐', 'bad'] : ['非蜜罐', 'good']);
+    const maxTax = Math.max(Number(sec.buyTaxPct || 0), Number(sec.sellTaxPct || 0));
+    badges.push([maxTax > 5 ? `高税 ${maxTax.toFixed(1)}%` : `税 ${maxTax.toFixed(1)}%`, maxTax > 5 ? 'bad' : 'good']);
+    badges.push(sec.mintable ? ['可增发', 'bad'] : ['不可增发', 'good']);
+    badges.push(sec.ownerRenounced ? ['所有权已放弃', 'good'] : ['所有权未放弃', 'warn']);
+    badges.push(sec.openSource ? ['开源', 'good'] : ['未开源', 'warn']);
+    badges.push([`LP 锁定 ${Number(sec.lpLockedPct || 0).toFixed(0)}%`, Number(sec.lpLockedPct || 0) >= 95 ? 'good' : 'warn']);
+    if (sec.hiddenOwner || sec.canTakeBackOwnership) badges.push(['隐藏/可夺回所有权', 'bad']);
+  } else {
+    badges.push(['安全数据不可用', 'warn']);
+  }
+  $('#ovBadges').innerHTML = badges.map(([t, c]) => `<span class="ov-badge ${c}">${esc(t)}</span>`).join('');
+
+  const links = [
+    ['GMGN', j.gmgnUrl],
+    ['DexScreener', j.pairUrl || j.chartUrl],
+    ['BscScan', j.bscscanUrl],
+  ].filter(([, u]) => u);
+  $('#ovLinks').innerHTML = links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noreferrer">${esc(t)} ↗</a>`).join('');
+
+  $('#ovNote').textContent = [
+    j.dexId ? `DEX：${j.dexId}${j.pairLabels?.length ? ' · ' + j.pairLabels.join('/') : ''}` : '尚无 DEX 交易对',
+    j.dexError ? `DexScreener：${j.dexError}` : '',
+    j.securityError ? `GoPlus：${j.securityError}` : '',
+    '数据来自 DexScreener / GoPlus，仅供交易前参考。',
+  ].filter(Boolean).join(' · ');
+}
+
+async function loadTokenOverview(ca) {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(String(ca || '').trim())) return;
+  const target = String(ca).trim().toLowerCase();
+  const wasSame = overviewCa === target;
+  overviewCa = target;
+  if (!wasSame) {
+    overviewPriceNative = null;
+    $('#tokenOverview').style.display = 'none';
+  }
+  try {
+    const j = await bridge('/api/token-overview?ca=' + encodeURIComponent(target));
+    if (overviewCa !== target) return;
+    renderTokenOverview(j);
+  } catch (e) {
+    if (overviewCa === target) {
+      $('#tokenOverview').style.display = '';
+      $('#ovSym').textContent = 'TOKEN';
+      $('#ovName').textContent = '';
+      $('#ovCa').textContent = short(target);
+      $('#ovPrice').textContent = '—';
+      $('#ovChg').textContent = '行情不可用';
+      $('#ovGrid').innerHTML = '';
+      $('#ovBadges').innerHTML = '<span class="ov-badge warn">数据源不可用</span>';
+      $('#ovLinks').innerHTML = `<a href="https://gmgn.ai/bsc/token/${target}" target="_blank" rel="noreferrer">GMGN ↗</a><a href="https://bscscan.com/token/${target}" target="_blank" rel="noreferrer">BscScan ↗</a>`;
+      $('#ovNote').textContent = errDetail(e);
+    }
+  }
+}
+
+setInterval(() => {
+  if (overviewCa && !document.hidden) loadTokenOverview(overviewCa).catch(() => {});
+}, 30000);
+
+async function swapQuoteProceedsToBnb(quote, before, decimals, label) {
+  if (!quote) return null;
+  const q = quote.toLowerCase();
+  if (q === P.ZERO_ADDRESS.toLowerCase()) return null;
+  const after = await P.erc20Balance(quote, state.account).catch(() => null);
+  if (after == null || after <= before) return null;
+  const delta = after - before;
+  if (delta <= 0n) return null;
+  const amount = P.formatUnits(delta, decimals);
+  log(`${label}：自动把 ${amount} 计价币换成 BNB…`, 'warn');
+  let j;
+  try {
+    j = await bridge('/api/dex-sell', {
+      method: 'POST',
+      body: JSON.stringify({ token: quote, amount }),
+    });
+  } catch (e) {
+    log(`${label}：自动换 BNB 失败（${errDetail(e)}），计价币仍在钱包`, 'bad');
+    return null;
+  }
+  if (!j.ok) {
+    log(`${label}：自动换 BNB 失败（${errDetail(j.error)}），计价币仍在钱包`, 'bad');
+    return null;
+  }
+  log(`${label}：已自动换成 ${j.order.toTokenActualQty} BNB`, 'ok');
+  if (j.txHash) logLink(`${label} BNB 交易 ${short(j.txHash)}`, 'https://bscscan.com/tx/' + j.txHash);
+  return j;
+}
+
+
+function setPayMode(mode) {
+  if (state.busy) return;
+  const canSwap = !!(state.info && !state.info.native && state.info.quote);
+  const next = canSwap && mode === 'bnb' ? 'bnb' : 'quote';
+  if (next !== state.payMode) {
+    state.payMode = next;
+    $('#buyAmount').value = '';
+    $('#buySum').innerHTML = '<span>输入金额后显示预计成交</span>';
+    $('#swapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+  }
+  renderBuyMode();
+  scheduleEstimate();
+}
+
+function renderBuyMode() {
+  const i = state.info;
+  const canSwap = !!(i && !i.native && i.quote);
+  if (!canSwap) state.payMode = 'quote';
+  const auto = canSwap && state.payMode === 'bnb';
+
+  $('#payModes').style.display = canSwap ? 'flex' : 'none';
+  $('#payModeBnb').classList.toggle('active', auto);
+  $('#payModeQuote').classList.toggle('active', !auto);
+  $('#swapBox').style.display = auto ? '' : 'none';
+
+  if (i) {
+    $('#payModeQuote').textContent = `直接输入 ${i.quoteSym}`;
+    $('#swapPair').textContent = `BNB → ${i.quoteSym}`;
+    $('#buyAmountLabel').textContent = auto
+      ? `买入金额（BNB · 自动换成 ${i.quoteSym}）`
+      : `买入金额（${i.quoteSym}）`;
+    $('#buyAmount').placeholder = auto ? '输入 BNB 数量' : `输入 ${i.quoteSym} 数量`;
+  } else {
+    $('#payModeQuote').textContent = '直接输入计价币';
+    $('#buyAmountLabel').textContent = '买入金额';
+    $('#buyAmount').placeholder = '先解析代币';
+  }
+
+  if (!auto) {
+    state.swapQuote = null;
+    $('#swapEstimate').textContent = '输入 BNB 数量后显示 ≈ 计价币';
+  }
+  syncMode();
+}
+
+/* ---------- ui ---------- */
+function setBusy(on) {
+  state.busy = on;
+  for (const id of ['#btnResolve', '#btnConnect', '#btnDiag', '#btnRefreshPos', '#btnClearCa', '#payModeBnb', '#payModeQuote', '#fmPayBnb', '#fmPayQuote', '#btnDexBuyQuote', '#btnDexBuy', '#btnDexSell', '#btnGangQuote', '#btnGangBuy', '#btnGangSell']) $(id).disabled = on;
+  $('#btnBuy').disabled = on || !state.account;
+  $('#btnSell').disabled = on || !state.account;
+  $('#btnFmBuy').disabled = on || !state.account;
+  $('#btnFmSell').disabled = on || !state.account;
+  $('#btnFmDexSell').disabled = on || !state.account;
+  $('#btnDexSell').disabled = on || !state.account;
+  $('#btnGangSell').disabled = on || !state.account;
+  if (on) {
+    $('#btnBuy').innerHTML = '<span class="spin"></span>处理中…';
+    $('#btnSell').innerHTML = '<span class="spin"></span>处理中…';
+  } else syncMode();
+}
+
+function syncMode() {
+  if (state.busy) return;
+  const dry = $('#dryRun').checked;
+  const auto = isAutoSwap();
+  $('#banner').classList.toggle('show', dry);
+  $('#btnBuy').textContent = dry
+    ? (auto ? '换汇并买入（预演 · 不发送）' : '买入（预演 · 不发送）')
+    : (auto ? '换汇并买入' : '买入');
+  $('#btnSell').textContent = dry ? '卖出（预演 · 不发送）' : '卖出';
+  $('#btnBuy').classList.toggle('dry', dry);
+  $('#btnSell').classList.toggle('dry', dry);
+}
+
+function guard(fn) {
+  return async (...a) => {
+    if (state.busy) return;
+    setBusy(true);
+    try { await fn(...a); }
+    catch (e) { log('错误：' + (e && (e.shortMessage || e.message) ? e.shortMessage || e.message : String(e)), 'bad'); }
+    finally { setBusy(false); }
+  };
+}
+
+function switchTab(which) {
+  const isBuy = which === 'buy';
+  $('#paneBuy').style.display = isBuy ? '' : 'none';
+  $('#paneSell').style.display = isBuy ? 'none' : '';
+  $('#tabBuy').classList.toggle('active', isBuy);
+  $('#tabSell').classList.toggle('active', !isBuy);
+  $('#tabBuy').classList.toggle('buy', isBuy);
+  $('#tabSell').classList.toggle('sell', !isBuy);
+  scheduleEstimate();
+}
+
+function fillBuyPct(pct) {
+  if (!state.bal || !state.info) throw new Error('先解析代币');
+  const useBnb = isAutoSwap() || state.info.native;
+  let avail, dec;
+  if (useBnb) {
+    if (state.bal.bnb == null) throw new Error('BNB 余额还没读到');
+    avail = state.bal.bnb > GAS_RESERVE ? state.bal.bnb - GAS_RESERVE : 0n;
+    dec = 18;
+  } else {
+    if (state.bal.quote == null) throw new Error('计价币余额还没读到');
+    avail = state.bal.quote;
+    dec = state.info.decimals;
+  }
+  const v = (avail * BigInt(pct)) / 100n;
+  if (v <= 0n) throw new Error('可用余额为 0');
+  $('#buyAmount').value = P.formatUnits(v, dec);
+}
+
+/* ---------- wiring ---------- */
+document.querySelector('#sigMode').onchange = () => {
+  const isKey = document.querySelector('#sigMode').value === 'key';
+  document.querySelector('#pk').style.display = isKey ? '' : 'none';
+  document.querySelector('#btnPk').style.display = isKey ? '' : 'none';
+  if (isKey) { log('已选本地私钥模式：填入私钥后点「应用」（只存内存）', 'warn'); return; }
+  state.sigMode = 'bridge';
+  state.pk = null;
+  document.querySelector('#pk').value = '';
+  state.account = null;
+  setPill(document.querySelector('#walletPill'), '未连接', '');
+  setPill(document.querySelector('#sessionPill'), 'session -', '');
+  for (const id of ['#btnBuy', '#btnSell', '#btnFmBuy', '#btnFmSell', '#btnFmDexSell', '#btnDexSell', '#btnGangSell']) document.querySelector(id).disabled = true;
+  log('已切回 Agentic 桥签名，请重新点连接');
+};
+document.querySelector('#btnPk').onclick = guard(applyPk);
+$('#btnConnect').onclick = guard(connect);
+$('#btnResolve').onclick = guard(resolve);
+$('#btnPresetWatchStart').onclick = guard(startPresetWatch);
+$('#btnPresetWatchStop').onclick = guard(stopPresetWatch);
+$('#btnAutoArm').onclick = guard(armAutoBuy);
+$('#btnAutoDisarm').onclick = guard(disarmAutoBuy);
+$('#btnDexBuyQuote').onclick = guard(quoteDexBuy);
+$('#btnDexBuy').onclick = guard(() => dexBuy());
+$('#btnDexSell').onclick = guard(() => dexSellGeneric());
+$$('[data-dexamt] button').forEach((b) => { b.onclick = () => { $('#dexBuyAmount').value = b.dataset.amt; }; });
+$$('[data-dexsellpct] button').forEach((b) => {
+  b.onclick = () => {
+    dexSellPct = Number(b.dataset.pct);
+    $$('[data-dexsellpct] button').forEach((x) => x.classList.toggle('active', x === b));
+    $('#dexSellSum').innerHTML = `<span>已选卖出 <b>${dexSellPct}%</b>，点「DEX 卖出」报价并确认</span>`;
+  };
+});
+$$('[data-gangamt] button').forEach((b) => { b.onclick = () => { $('#gangBnb').value = b.dataset.amt; }; });
+$$('[data-gangsellpct] button').forEach((b) => {
+  b.onclick = () => {
+    gangSellPct = Number(b.dataset.pct);
+    $$('[data-gangsellpct] button').forEach((x) => x.classList.toggle('active', x === b));
+    $('#gangSellSum').innerHTML = `<span>已选卖出 <b>${gangSellPct}%</b>，点「Gang 卖出」报价并确认</span>`;
+  };
+});
+$('#btnGangQuote').onclick = guard(quoteGangBuy);
+$('#btnGangBuy').onclick = guard(() => buyGang());
+$('#btnGangSell').onclick = guard(() => gangSell());
+renderPresetGrids();
+renderQuickTrade();
+renderTradeSettings();
+$('#btnTwQuick').onclick = () => setQuickTrade(!quickTrade);
+$$('[data-slip-bps]').forEach((b) => { b.onclick = () => setTradeSlip(Number(b.dataset.slipBps)); });
+$('#twSlipCustom').addEventListener('change', () => {
+  const v = Number($('#twSlipCustom').value);
+  if (Number.isFinite(v) && v > 0) setTradeSlip(v * 100);
+  else renderTradeSettings();
+});
+$('#twSlipCustom').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#twSlipCustom').dispatchEvent(new Event('change')); }
+});
+$('#twGasLevel').onchange = () => {
+  tradeGasLevel = $('#twGasLevel').value;
+  localStorage.setItem('baw.gasLevel', tradeGasLevel);
+};
+$('#twMev').onchange = () => {
+  tradeMev = $('#twMev').checked;
+  localStorage.setItem('baw.mev', tradeMev ? '1' : '0');
+};
+$('#btnTwEdit').onclick = openPresetEditor;
+$('#btnTwEditBuy').onclick = openPresetEditor;
+$('#btnTwEditSell').onclick = openPresetEditor;
+$('#btnTwSave').onclick = guard(savePresetEditor);
+$('#btnTwReset').onclick = guard(() => {
+  buyPresets = [...DEFAULT_BUY_PRESETS];
+  sellPresets = [...DEFAULT_SELL_PRESETS];
+  savePreset('baw.ui.buyPresets', buyPresets);
+  savePreset('baw.ui.sellPresets', sellPresets);
+  renderPresetGrids();
+  if ($('#twEditPanel').style.display !== 'none') {
+    $('#twEditPanel').style.display = 'none';
+    openPresetEditor();
+  }
+  log('交易预设已恢复默认', 'ok');
+});
+$('#btnUniCustomBuy').onclick = guard(() => uniBuy($('#uniCustomBuy').value));
+$('#btnUniCustomSell').onclick = guard(() => uniSell($('#uniCustomSell').value));
+$('#btnBuy').onclick = guard(() => onBuy());
+$('#btnSell').onclick = guard(() => onSell());
+$('#fmTabBuy').onclick = () => fmTab('buy');
+$('#fmTabSell').onclick = () => fmTab('sell');
+$$('[data-fmpct] button').forEach((b) => {
+  b.onclick = () => { try { fmQuick(b.parentElement.dataset.fmpct, Number(b.dataset.pct)); } catch (e) { log(e.message, 'bad'); } };
+});
+$$('[data-fmpaymode]').forEach((b) => {
+  b.onclick = () => setFmPayMode(b.dataset.fmpaymode);
+});
+$('#fmBuyAmount').addEventListener('input', scheduleFmEstimate);
+$('#btnFmBuy').onclick = guard(() => fmBuy());
+$('#btnFmSell').onclick = guard(() => fmSell());
+$('#btnFmDexSell').onclick = guard(dexSell);
+$('#btnDiag').onclick = guard(diag);
+$('#btnRefreshPos').onclick = guard(async () => { await afterTrade(); log('持仓已刷新', 'ok'); });
+$('#btnClearLog').onclick = () => { $('#log').innerHTML = ''; };
+$('#btnCopyLog').onclick = () => copyText($('#log').innerText, '日志');
+async function pasteCaAndResolve() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const m = String(text || '').match(/0x[a-fA-F0-9]{40}/);
+    if (!m) { log('剪贴板里没有 0x 代币地址', 'warn'); return; }
+    const ca = m[0].toLowerCase();
+    if ($('#ca').value.trim().toLowerCase() === ca) { log('CA 已经在输入框', 'warn'); return; }
+    $('#ca').value = ca;
+    localStorage.setItem('baw.ca', ca);
+    log('已从剪贴板识别 CA：' + short(ca), 'ok');
+    if (!state.account) { log('先连接钱包再解析', 'warn'); return; }
+    $('#btnResolve').click();
+  } catch (e) {
+    log('读取剪贴板失败：' + (e.message || e) + '（可手动粘贴）', 'bad');
+  }
+}
+
+let caAutoTimer = null;
+$('#btnPasteCa').onclick = pasteCaAndResolve;
+$('#ca').addEventListener('input', () => {
+  const v = $('#ca').value.trim();
+  clearTimeout(caAutoTimer);
+  if (!/^0x[a-fA-F0-9]{40}$/.test(v)) return;
+  caAutoTimer = setTimeout(() => {
+    if (state.busy) return;
+    if ($('#ca').value.trim() !== v) return;
+    if (!state.account) { log('CA 已填好，连接钱包后自动解析', 'warn'); return; }
+    $('#btnResolve').click();
+  }, 150);
+});
+$('#ca').addEventListener('paste', () => {
+  setTimeout(() => {
+    const v = $('#ca').value.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(v) || state.busy) return;
+    if (!state.account) { log('CA 已填好，连接钱包后自动解析', 'warn'); return; }
+    $('#btnResolve').click();
+  }, 30);
+});
+$('#ca').addEventListener('focus', async () => {
+  if ($('#ca').value.trim() || state.busy) return;
+  try {
+    const text = await navigator.clipboard.readText();
+    const m = String(text || '').match(/0x[a-fA-F0-9]{40}/);
+    if (!m) return;
+    const ca = m[0].toLowerCase();
+    $('#ca').value = ca;
+    localStorage.setItem('baw.ca', ca);
+    log('检测到剪贴板 CA：' + short(ca), 'ok');
+    if (state.account) $('#btnResolve').click();
+  } catch { /* clipboard permission denied */ }
+});
+window.addEventListener('focus', async () => {
+  if (state.busy) return;
+  try {
+    const text = await navigator.clipboard.readText();
+    const m = String(text || '').match(/0x[a-fA-F0-9]{40}/);
+    if (!m) return;
+    const ca = m[0].toLowerCase();
+    if (ca === $('#ca').value.trim().toLowerCase()) return;
+    $('#ca').value = ca;
+    localStorage.setItem('baw.ca', ca);
+    log('窗口聚焦，自动识别剪贴板 CA：' + short(ca), 'ok');
+    if (state.account) $('#btnResolve').click();
+  } catch { /* clipboard permission denied */ }
+});
+$('#btnClearCa').onclick = () => { $('#ca').value = ''; $('#ca').focus(); };
+$('#dryRun').onchange = () => { localStorage.setItem('baw.dry', $('#dryRun').checked ? '1' : '0'); syncMode(); };
+
+$('#tabBuy').onclick = () => switchTab('buy');
+$('#tabSell').onclick = () => switchTab('sell');
+$$('[data-paymode]').forEach((b) => {
+  b.onclick = () => setPayMode(b.dataset.paymode);
+});
+$('#buyAmount').addEventListener('input', scheduleEstimate);
+$('#buySlip').addEventListener('input', scheduleEstimate);
+$('#sellPct').addEventListener('input', scheduleEstimate);
+$('#sellSlip').addEventListener('input', scheduleEstimate);
+$('#ca').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#btnResolve').click(); });
+
+$$('[data-buypct]').forEach((b) => {
+  b.onclick = () => { try { fillBuyPct(Number(b.dataset.buypct)); scheduleEstimate(); } catch (e) { log(e.message, 'bad'); } };
+});
+$$('[data-sellpct]').forEach((b) => {
+  b.onclick = () => { $('#sellPct').value = b.dataset.sellpct; scheduleEstimate(); };
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-copy]');
+  if (t) copyText(t.dataset.copy, '地址');
+});
+
+/* ---------- init ---------- */
+(function init() {
+  const savedDry = localStorage.getItem('baw.dry');
+  $('#dryRun').checked = savedDry === null ? true : savedDry === '1';
+  const savedCa = localStorage.getItem('baw.ca');
+  if (savedCa) $('#ca').value = savedCa;
+  const savedSlip = localStorage.getItem('baw.slip');
+  if (savedSlip) { $('#buySlip').value = savedSlip; $('#sellSlip').value = savedSlip; }
+  setupUnifiedTrade();
+  setQuickTrade(quickTrade, true);
+
+  // 监听卡片移到底部，默认折叠，突出交易面板
+  const wrapEl = document.querySelector('.wrap');
+  const watchEl = $('#presetWatchCard');
+  const footerEl = $('#footerNote');
+  if (wrapEl && watchEl && footerEl) wrapEl.insertBefore(watchEl, footerEl);
+  let watchOpen = localStorage.getItem('baw.watchOpen') === '1';
+  const applyWatchOpen = (open) => {
+    watchOpen = !!open;
+    $('#presetWatchBody')?.classList.toggle('open', watchOpen);
+    if ($('#btnWatchToggle')) $('#btnWatchToggle').textContent = watchOpen ? '收起' : '展开';
+    try { localStorage.setItem('baw.watchOpen', watchOpen ? '1' : '0'); } catch { /* ignore */ }
+  };
+  if ($('#btnWatchToggle')) $('#btnWatchToggle').onclick = () => applyWatchOpen(!watchOpen);
+  applyWatchOpen(watchOpen);
+  if ($('#bridgeHost')) $('#bridgeHost').textContent = location.host;
+
+  if ($('#btnTopSettings')) $('#btnTopSettings').onclick = () => {
+    $('#topAdvanced').classList.toggle('open');
+    $('#btnTopSettings').textContent = $('#topAdvanced').classList.contains('open') ? '×' : '⚙';
+  };
+  if ($('#btnOvToggle')) $('#btnOvToggle').onclick = () => {
+    const open = $('#ovDetails').style.display === 'none';
+    $('#ovDetails').style.display = open ? '' : 'none';
+    $('#btnOvToggle').textContent = open ? '行情与安全 ▲' : '行情与安全 ▼';
+  };
+  let logOpen = false;
+  const applyLogOpen = (open) => {
+    logOpen = !!open;
+    $('#log').style.display = logOpen ? '' : 'none';
+    $('#btnLogToggle').textContent = logOpen ? '收起' : '展开';
+  };
+  $('#btnLogToggle').onclick = () => applyLogOpen(!logOpen);
+  applyLogOpen(false);
+
+  // 深链：?ca=0x… 预填合约，&auto=1 自动连接并解析
+  const q = new URLSearchParams(location.search);
+  if (q.get('ca')) $('#ca').value = q.get('ca');
+  const bh = $('#bridgeHost');
+  if (bh) bh.textContent = location.host;
+  syncMode();
+  log('就绪：连接 → 填 CA 解析 → 选金额 → 下单（预演默认开启）');
+  loadPresetWatch().catch(() => {});
+  setInterval(() => { loadPresetWatch().catch(() => {}); }, 3000);
+
+  if (q.get('auto') === '1') {
+    (async () => {
+      try {
+        await connect();
+        if (!state.info && $('#ca').value.trim()) await resolve();
+      } catch (e) { log('自动准备失败：' + (e.message || e), 'bad'); }
+    })();
+  }
+})();
+
+$('#ca').addEventListener('change', () => localStorage.setItem('baw.ca', $('#ca').value.trim()));
+$('#buySlip').addEventListener('change', () => {
+  localStorage.setItem('baw.slip', $('#buySlip').value);
+  $('#sellSlip').value = $('#buySlip').value;
+});
+</script>
+</body>
+</html>
