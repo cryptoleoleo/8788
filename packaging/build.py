@@ -33,7 +33,7 @@ shutil.copy2(root / 'original-sha256.json', dev / 'original-sha256.json')
 shutil.copy2(root / 'packaging/Installer.swift', dev / 'Installer.swift')
 shutil.copy2(root / 'packaging/build.py', dev / 'build.py')
 shutil.copytree(root / 'verification', dev / 'verification', ignore=shutil.ignore_patterns('package-stage.json', 'package-results.json'))
-diff = subprocess.check_output(['git', 'diff', '--', 'baw-oneclick/index.html', 'baw-oneclick/serve.mjs', 'baw-oneclick/gang-buy.mjs', 'runtime.zsh', 'mac-launch.mjs', '启动原版服务.command'], cwd=root)
+diff = subprocess.check_output(['git', 'diff', 'd5309e2', '--', 'baw-oneclick/index.html', 'baw-oneclick/serve.mjs', 'baw-oneclick/gang-buy.mjs', 'runtime.zsh', 'mac-launch.mjs', '启动原版服务.command'], cwd=root)
 (dev / 'original-integration.diff').write_bytes(diff)
 for arch in ['arm64', 'x86_64']:
     subprocess.run(['/usr/bin/swiftc', '-parse-as-library', '-target', arch + '-apple-macos13.5', str(root / 'packaging/Installer.swift'), '-framework', 'AppKit', '-o', str(stage / arch)], check=True)
