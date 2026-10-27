@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: '24.13.0'
       - name: Extract and verify Windows package
+        id: package
         shell: pwsh
         run: |
           $zip = Join-Path $PWD 'releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip'
@@ -38,5 +39,6 @@ jobs:
       - name: Core regressions and Windows installer checks (fake wallets only)
         run: node --test tests/*.test.mjs
       - name: Real Windows CMD and isolated CLI integration (no real wallets)
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         shell: pwsh
         run: node tests/windows-e2e.mjs "$env:BAW_WINDOWS_PACKAGE"

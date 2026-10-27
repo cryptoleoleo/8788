@@ -50,7 +50,9 @@ test('Windows installer copies only manifest files, preserves external data and 
 });
 test('Windows installer rejects damaged payload, unrelated folder and running installation without replacing files',async t=>{
  const p=await payload(t);mkdirSync(p.destination,{recursive:true});writeFileSync(join(p.destination,'keep.txt'),'unchanged');
- await assert.rejects(installWindows({...p,env:{}}),/未覆盖/);assert.equal(readFileSync(join(p.destination,'keep.txt'),'utf8'),'unchanged');rmSync(p.destination,{recursive:true});
+ await assert.rejects(installWindows({...p,env:{}}),/未覆盖/);assert.equal(readFileSync(join(p.destination,'keep.txt'),'utf8'),'unchanged');
+ // Leave the unrelated folder intact; use a separate target for the running-install check.
+ p.destination=join(p.root,'owned installation','program');
  await installWindows({...p,env:{}});const server=createServer();await new Promise(r=>server.listen(p.port,'127.0.0.1',r));
  try {await assert.rejects(installWindows({...p,env:{}}),/端口/);assert.ok(existsSync(join(p.destination,'Start-BAW.cmd')));}finally{await new Promise(r=>server.close(r));}
  writeFileSync(join(p.source,'baw-oneclick/serve.mjs'),'tampered');await assert.rejects(installWindows({...p,env:{}}),/文件校验失败/);
