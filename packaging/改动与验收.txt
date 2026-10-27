@@ -31,7 +31,7 @@ buyGang、gangSell、prepareBuyForGross、executeSell、bridgeSend 函数和默�
 protocol.js、preset-watch.mjs、preset-autobuy.mjs、依赖未修改。
 
 验证层级：
-代码检查：新增/修改 JS 的语法检查、git diff --check、13 项 Node 测试通过。
+代码检查：新增/修改 JS 的语法检查、git diff --check、16 项 Node 测试通过。
 服务可用（测试环境）：增强版真实 HTTP 服务配合虚拟 CLI，在临时端口响应；
 API 鉴权、独立身份地址、预演禁止提交、去重、停止、过期、状态恢复通过。
 Chrome 页面验证：临时新建测试 profile；320/430/900 宽度、分组管理、保存不启动、
@@ -50,3 +50,8 @@ node tests/browser.mjs
 node tests/original-page.mjs
 浏览器测试自行建立临时服务与虚拟 CLI；不调用你的真实钱包。
 本包不自动运行原包附带的 smoke/native-cycle 等脚本。
+
+rc2 补充
+ca-input.mjs 统一纯 CA 与 Debot BSC URL 解析，接入输入、粘贴、剪贴板、
+解析按钮、已存 CA 及深链参数。16 项 Node 测试通过，Debot 原页面交互测试通过。
+运行 Debot 页面测试：node tests/debot-browser.mjs。无真实钱包/交易调用。

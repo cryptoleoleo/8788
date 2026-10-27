@@ -1,4 +1,4 @@
-BAW 原程序多钱包增强版 · Mac 1.0.0-rc1（集成验收版）
+BAW 原程序多钱包增强版 · Mac 1.0.0-rc2（集成验收版）
 
 这是在朋友提供的原版 BAW 页面和 Node 服务中增加多钱包与跟单的版本。
 没有新建 Chrome 扩展外壳，没有 iframe 替代插件，也没有更改 8788 品牌。
@@ -56,7 +56,7 @@ Gang Soft 事件；无法确认计价币的其他事件会跳过，避免把其�
 本 ZIP 只含静态程序、安装器、源代码与虚拟钱包测试材料，不含任何个人钱包登录数据。
 
 当前验证状态
-已通过：代码检查、原包一致性检查、13 项自动测试、测试桩服务、Chrome 页面交互、
+已通过：代码检查、原包一致性检查、16 项自动测试、测试桩服务、Chrome 页面交互、
 原页面 connect/resolve/uniBuy/dexBuy 回调集成测试，以及 Mac 安装器文件复制验证。
 所有交易/链上响应测试都使用测试桩；没有执行真实买卖、授权、转账或自动跟单。
 尚未验证：两个真实 Binance 身份分别完成配对、真实钱包交易、真实链上跟单、
@@ -74,3 +74,9 @@ Gang Soft 事件；无法确认计价币的其他事件会跳过，避免把其�
 安装后：~/Applications/BAW-Original-Multi/baw-oneclick/
 ZIP 中：安装 BAW 多钱包增强版.app/Contents/Resources/program/baw-oneclick/
 “开发与验证”包含原文件 SHA256 清单、改动 diff、测试和安装器源代码。
+
+Debot CA 兼容（rc2）
+可直接在 CA 输入框粘贴 https://debot.ai/token/bsc/312069_0x... 形式的链接。
+自动提取完整 0x 地址，支持链接查询参数、片段以及“粘贴解析”按钮。
+地址栏 ?ca= 参数也接受经过 URL 编码的 Debot BSC 链接。
+非 BSC 的 Debot 链接不会作为 BSC 代币解析；不访问 Debot 页面，不改变交易流程。

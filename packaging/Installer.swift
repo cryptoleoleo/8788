@@ -6,7 +6,7 @@ struct InstallFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 let fm = FileManager.default
-let requiredFiles = [".baw-original-multi-package", "baw-oneclick/serve.mjs", "baw-oneclick/node_modules/ethers/package.json", "mac-launch.mjs", "mac-network.mjs", "runtime.zsh", "启动原版服务.command", "mac-options.json", "baw-oneclick/wallet-runtime.mjs", "baw-oneclick/wallet-features.js", "baw-oneclick/copy-feed.mjs", "baw-oneclick/profile-bootstrap.mjs", "baw-oneclick/profile-keytar.mjs", "baw-oneclick/multi-service.mjs", "baw-oneclick/multi-store.mjs", "baw-oneclick/wallet-features.css"]
+let requiredFiles = [".baw-original-multi-package", "baw-oneclick/serve.mjs", "baw-oneclick/node_modules/ethers/package.json", "mac-launch.mjs", "mac-network.mjs", "runtime.zsh", "启动原版服务.command", "mac-options.json", "baw-oneclick/wallet-runtime.mjs", "baw-oneclick/wallet-features.js", "baw-oneclick/copy-feed.mjs", "baw-oneclick/profile-bootstrap.mjs", "baw-oneclick/profile-keytar.mjs", "baw-oneclick/multi-service.mjs", "baw-oneclick/multi-store.mjs", "baw-oneclick/wallet-features.css", "baw-oneclick/ca-input.mjs"]
 
 func validatePayload(_ root: URL) throws {
     for name in requiredFiles {

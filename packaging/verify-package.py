@@ -46,7 +46,7 @@ result = {'passed': True, 'programFiles': len(expected), 'checks': [
 (root / 'verification/package-results.json').write_text(json.dumps(result, indent=2))
 shutil.copy2(root / 'verification/package-results.json', bundle / '开发与验证/verification/package-results.json')
 shutil.copy2(Path(__file__), bundle / '开发与验证/verify-package.py')
-output = Path('/Users/rich/Downloads/BAW-Original-Multiwallet-Mac-1.0.0-rc1.zip')
+output = Path('/Users/rich/Downloads/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip')
 if output.exists(): raise RuntimeError('Refusing to overwrite an existing release: ' + str(output))
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for p in sorted(bundle.rglob('*')):

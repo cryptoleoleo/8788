@@ -4,3 +4,14 @@ data/
 *.pid
 .DS_Store
 verification/package-stage.json
+
+# Local wallet/session material must never enter Git.
+.env
+.env.*
+session.json
+settings.json
+copy-seen.json
+identities/
+*.pem
+*.key
+__pycache__/

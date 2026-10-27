@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "direct URL input",
+    "paste event",
+    "clipboard button with fake clipboard",
+    "resolve button",
+    "saved CA normalized",
+    "deep-link ca parameter",
+    "reject non-BSC Debot link"
+  ],
+  "network": "Local fixture only; no real wallet or chain access"
+}
