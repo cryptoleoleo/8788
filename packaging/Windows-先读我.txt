@@ -1,0 +1,68 @@
+BAW 原程序多钱包增强版 · Windows 1.0.0-rc3
+
+Windows 版与 Mac 版使用同一套原版 BAW 页面与交易逻辑，包含：
+多 Binance Agentic Wallet 独立身份、钱包分组、勾选购买、跟单、Debot BSC 链接识别。
+原 Chrome 侧边栏扩展仍需朋友提供。本包没有 manifest.json，不能直接导入 Chrome。
+
+准备环境
+使用 Windows 11 x64，或仍受支持、能运行 Node 24 的 Windows 10 x64 环境。
+安装 Windows x64 版 Node.js 24 LTS：https://nodejs.org/
+Node 24 支持平台说明：https://github.com/nodejs/node/blob/v24.13.0/BUILDING.md#platform-list
+在新打开的 Windows 终端中运行：
+  npm install -g @binance/agentic-wallet@1.11.0
+不要把 Mac 上安装的 CLI 或钥匙串复制到 Windows；Windows 的 CLI 必须本机安装。
+不要在 WSL 终端中运行这个 Windows 启动器。
+
+安装
+1. 完整解压 ZIP，保留 Install-Windows.cmd 与 program 文件夹的相对位置。
+2. 双击 Install-Windows.cmd；不需要管理员权限，不需要修改 PowerShell 执行策略。
+3. 安装到当前用户目录：
+   %LOCALAPPDATA%\BAW-Original-Multi\program
+   安装器会逐文件校验。旧版必须有本程序标记才能覆盖；更新前会自动备份，保留配置。
+   不复制包外的登录数据；安装完成不会自动启动服务或进行钱包操作。
+4. 进入上述目录，双击 Start-BAW.cmd。保留窗口，Ctrl+C 停止服务。
+   默认地址仍是 http://127.0.0.1:8787，不会因为名称为 8788 自动切换端口。
+   端口占用时会退出，请辨认原服务并在其自己的窗口停止；不会自动结束其他进程。
+
+使用
+已有真正原扩展时继续使用其侧栏入口，并核对地址配置。
+尚无原扩展时，浏览器打开服务地址可验收原程序页面；这不代表原侧栏加载验证完成。
+进入“钱包”页添加独立身份，逐一在对应 Binance App 完成配对，然后检查 BSC 地址。
+在“交易”页勾选钱包或分组，买入档位是每钱包金额，确认后按原流程依次执行。
+“跟单”页保存不会启动，新任务默认预演，运行时面板需要保持打开。
+仅跟买入；金额镜像只处理确认以 BNB 计价的 Gang Soft 事件。其余平台可使用固定金额。
+原预设监听继续使用原有身份。没有修改原按钮金额、滑点、交易路线或买卖计算。
+可直接粘贴 https://debot.ai/token/bsc/312069_0x... 形式的链接，自动提取 BSC CA。
+
+配置
+安装目录 windows-options.json 的 port 默认 null，沿用 8787。
+只有确定原扩展使用其他端口时，才修改这个值，或通过 PORT 环境变量指定。
+通常自动找到 npm 全局安装的 CLI；自定义安装位置可设置 BAW_CLI 环境变量，或
+windows-options.json 的 cliPath，指向 @binance/agentic-wallet/dist/index.js 的完整路径。
+JSON 中反斜杠需要写为双反斜杠，也可使用正斜杠。不能填写 baw.cmd。
+Node 位置不在 PATH 时，可设置 BAW_NODE 为 node.exe 的完整路径。
+在终端运行 Start-BAW.cmd --check 可只检查 Node、CLI 和端口，不访问钱包或启动服务。
+
+网络
+沿用已有 HTTP_PROXY / HTTPS_PROXY，或当前 Windows 用户启用的手动 HTTP/HTTPS 代理。
+本机 localhost、127.0.0.1、::1 直连。不修改注册表或系统代理配置。
+PAC 自动配置和仅 SOCKS 的代理不会转换为 HTTP 代理；需要代理时请自行提供 HTTP 端口。
+BAW_SYSTEM_PROXY=0 可关闭自动代理适配。公共 WSS 的实际连通性取决于本机网络。
+
+数据
+新增身份元数据及 CLI 独立目录位于：
+  %LOCALAPPDATA%\BAW-Original-Multi\data
+它与 program 分开，更新程序不会复制、覆盖或删除钱包数据。
+原有身份使用 CLI 原来的登录位置，新身份使用独立目录与独立凭据服务名。
+登录与签名由官方 CLI 处理；不要把 data、凭据、私钥、助记词或浏览器资料发给朋友。
+朋友应自己逐一配对独立身份。
+
+验证边界
+本地完成路径、代理、安装/备份/端口保护、原文件完整性和模拟服务回归检查。
+Windows 自动验证见仓库 Windows compatibility 工作流：
+https://github.com/cryptoleoleo/8788/actions/workflows/windows.yml
+该工作流在真实 Windows runner 上使用虚拟 CLI 测试 CMD 安装、启动、服务与身份隔离。
+它不配对真实 Binance 身份、不执行真实买卖、转账、授权或自动跟单。
+真实钱包配对/交易、朋友电脑的 Windows 桌面交互和原 Chrome 扩展加载仍需分别验收。
+
+源码和 Windows 运行文件均包含在 ZIP 中，GitHub 仓库保留 Mac 版本下载。

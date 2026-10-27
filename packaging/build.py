@@ -28,7 +28,7 @@ for name in ['先读我.txt', '改动与验收.txt']:
     shutil.copy2(root / 'packaging' / name, bundle / name)
 dev = bundle / '开发与验证'
 dev.mkdir()
-shutil.copytree(root / 'tests', dev / 'tests', ignore=shutil.ignore_patterns('__pycache__'))
+shutil.copytree(root / 'tests', dev / 'tests', ignore=shutil.ignore_patterns('__pycache__', 'windows*.mjs'))
 shutil.copy2(root / 'original-sha256.json', dev / 'original-sha256.json')
 shutil.copy2(root / 'packaging/Installer.swift', dev / 'Installer.swift')
 shutil.copy2(root / 'packaging/build.py', dev / 'build.py')

@@ -1,0 +1,2 @@
+# Keep the original supplied files byte-identical on Windows checkouts too.
+* -text

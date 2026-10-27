@@ -1,0 +1,42 @@
+name: Windows compatibility
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows.yml'
+      - '.gitattributes'
+      - 'windows-*'
+      - '*.cmd'
+      - 'baw-oneclick/**'
+      - 'tests/**'
+      - 'releases/*Windows*'
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+      - name: Extract and verify Windows package
+        shell: pwsh
+        run: |
+          $zip = Join-Path $PWD 'releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip'
+          $expected = ((Get-Content -LiteralPath ($zip + '.sha256')) -split ' ')[0]
+          if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw 'ZIP checksum mismatch' }
+          $target = Join-Path $env:RUNNER_TEMP 'BAW expanded 中文 & spaces'
+          Expand-Archive -LiteralPath $zip -DestinationPath $target
+          $package = Join-Path $target 'BAW-Original-Multiwallet-Windows-1.0.0-rc3'
+          "BAW_WINDOWS_PACKAGE=$package" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Copy-Item -LiteralPath (Join-Path $package 'program/baw-oneclick/node_modules') -Destination 'baw-oneclick/node_modules' -Recurse
+      - name: Core regressions and Windows installer checks (fake wallets only)
+        run: node --test tests/*.test.mjs
+      - name: Real Windows CMD and isolated CLI integration (no real wallets)
+        shell: pwsh
+        run: node tests/windows-e2e.mjs "$env:BAW_WINDOWS_PACKAGE"

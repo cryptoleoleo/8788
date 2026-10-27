@@ -4,7 +4,6 @@ import { mkdtempSync, rmSync, readFileSync, mkdirSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { MultiStore } from '../baw-oneclick/multi-store.mjs';
 import { WalletRuntime } from '../baw-oneclick/wallet-runtime.mjs';
 import { CopyFeed, decodeBuy, eventAmount, subscriptions } from '../baw-oneclick/copy-feed.mjs';
@@ -31,7 +30,7 @@ test('keychain adapter namespaces independent identities and never falls back to
  writeFileSync(join(fixtureDir,'node_modules/@github/keytar/package.json'),JSON.stringify({type:'module',main:'index.js'}));
  writeFileSync(join(fixtureDir,'node_modules/@github/keytar/index.js'),`export default {getPassword:async(s,a)=>s+':'+a,setPassword:async(s,a,v)=>{if(s==='baw')throw Error('legacy touched');return s},deletePassword:async(s,a)=>s};`);
  const entry=join(fixtureDir,'cli.mjs');writeFileSync(entry,`const m=await import('@github/keytar');console.log(await m.default.getPassword('baw','agentSessionId'));console.log(await m.default.setPassword('baw','agentSessionId','FAKE_TEST_VALUE'));`);
- const loader=fileURLToPath(new URL('../baw-oneclick/profile-bootstrap.mjs',import.meta.url));
+ const loader=new URL('../baw-oneclick/profile-bootstrap.mjs',import.meta.url).href;
  for(const n of ['a','b']){const walletId='w_'+n.repeat(24);const out=execFileSync(process.execPath,['--import',loader,entry],{env:{...process.env,BAW_ISOLATED_ID:walletId},encoding:'utf8'});assert.ok(out.includes('baw-original-multi.'+walletId+':agentSessionId'));assert.ok(!out.includes('FAKE_TEST_VALUE'));}
 });
 test('scoped CLI isolation handles concurrent wallets, binds from, and blocks a changed identity before execute',async t=>{

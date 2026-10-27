@@ -1,10 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync, chmodSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, win32, posix } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { parseEther, formatEther } from 'ethers';
 
 export const addressPattern = /^0x[0-9a-fA-F]{40}$/;
+export function defaultDataDirectory(platform = process.platform, env = process.env, home = homedir()) {
+  if (env.BAW_DATA_DIR) return env.BAW_DATA_DIR;
+  if (platform === 'win32') return win32.join(env.LOCALAPPDATA || win32.join(home, 'AppData', 'Local'), 'BAW-Original-Multi', 'data');
+  return posix.join(home, 'Library', 'Application Support', 'BAW-Original-Multi');
+}
 export const newId = (prefix) => `${prefix}_${randomBytes(12).toString('hex')}`;
 export const text = (s, max = 40) => {
   if (typeof s !== 'string' || !s.trim() || s.trim().length > max) throw new Error('名称不能为空或过长');
@@ -18,7 +23,7 @@ export function amount(raw, allowZero = false) {
   return formatEther(n);
 }
 export class MultiStore {
-  constructor(directory = process.env.BAW_DATA_DIR || join(homedir(), 'Library', 'Application Support', 'BAW-Original-Multi')) {
+  constructor(directory = defaultDataDirectory()) {
     this.directory = resolve(directory);
     this.file = join(this.directory, 'settings.json');
     this.data = existsSync(this.file) ? JSON.parse(readFileSync(this.file, 'utf8')) : {

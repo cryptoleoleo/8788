@@ -2,10 +2,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { execFile } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname, isAbsolute } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { addressPattern } from './multi-store.mjs';
 
-const bootstrap = fileURLToPath(new URL('./profile-bootstrap.mjs', import.meta.url));
+const bootstrap = new URL('./profile-bootstrap.mjs', import.meta.url).href;
 export const walletContext = new AsyncLocalStorage();
 export function parseCliJSON(raw) {
   try { return JSON.parse(raw); } catch {}
@@ -32,7 +31,7 @@ export class WalletRuntime {
   spec(id) {
     mkdirSync(this.store.directory, { recursive: true, mode: 0o700 });
     const cli = this.env.BAW_CLI;
-    if (!cli || !isAbsolute(cli)) throw new Error('多钱包需要 BAW_CLI 指向钱包 CLI 的绝对路径，请使用 Mac 启动器');
+    if (!cli || !isAbsolute(cli)) throw new Error('多钱包需要 BAW_CLI 指向钱包 CLI 的绝对路径，请使用对应系统的启动器');
     const env = { ...this.env };
     const args = [];
     if (id !== 'original') {

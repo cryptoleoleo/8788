@@ -4,9 +4,11 @@
 
 **本仓库暂不包含截图中原 Chrome 扩展的入口文件，没有 `manifest.json`，不能直接导入 Chrome。** 原扩展仍需由提供者补齐；这里没有创建替代扩展外壳。
 
-当前分发包：[Mac 1.0.0-rc2 ZIP](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip)，[SHA256](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip.sha256)。下载时使用 GitHub 文件页面的 **Download raw file**。
+Mac 分发包：[Mac 1.0.0-rc2 ZIP](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip)，[SHA256](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip.sha256)。下载时使用 GitHub 文件页面的 **Download raw file**。
 
-解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
+Windows 分发包：[Windows 1.0.0-rc3 ZIP](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip)，[SHA256](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip.sha256)。完整解压后双击 `Install-Windows.cmd`，再运行 `%LOCALAPPDATA%\BAW-Original-Multi\program\Start-BAW.cmd`。需要 Windows x64、Node.js 24、Windows 本机安装的 CLI 1.11.0，不需要管理员权限。独立身份数据保存在同级 `data` 目录，程序更新时保留。详见包内 `Windows-先读我.txt` 和 [Windows 自动验证](https://github.com/cryptoleoleo/8788/actions/workflows/windows.yml)。
+
+Mac 版解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
 
 rc2 支持直接输入或粘贴 Debot BSC 链接，例如：
 
@@ -23,9 +25,9 @@ https://debot.ai/token/bsc/312069_0x0c6302401aa5325c2e36f170f52c00b1d220b405
 - 固定金额适用于已接入的平台信号；金额镜像仅处理能确认 BNB 计价的 Gang Soft 事件。
 - 原预设监听仍使用原有身份。原交易路径不支持的代币会报错，不使用另一套交易引擎。
 
-`baw-oneclick/` 是程序源码；`packaging/` 是 Mac 启动分发说明与原生安装器构建代码；`tests/` 和 `verification/` 是测试及结果；`reference/` 是所提供跟单参考包中的静态源码材料。
+`baw-oneclick/` 是程序源码；`packaging/` 是 Mac / Windows 分发说明与构建代码；`tests/` 和 `verification/` 是测试及结果；`reference/` 是所提供跟单参考包中的静态源码材料。
 
-Git 不包含展开的 `node_modules`。推荐使用 ZIP 内的原包依赖。仅从源码启动时，可在 `baw-oneclick` 中安装其声明的 npm 依赖，再使用根目录的 Mac 启动器；身份适配仍要求 CLI 1.11.0。需要逐字节核对原包时，必须使用 ZIP 中随附的原始依赖，重新安装依赖无法保证每个文件的 SHA256 一致。
+Git 不包含展开的 `node_modules`。推荐使用 ZIP 内的原包依赖。仅从源码启动时，可在 `baw-oneclick` 中安装其声明的 npm 依赖，再使用根目录对应系统的启动器；身份适配仍要求 CLI 1.11.0。需要逐字节核对原包时，必须使用 ZIP 中随附的原始依赖，重新安装依赖无法保证每个文件的 SHA256 一致。
 
 开发验证命令（Node 24）：
 
@@ -39,6 +41,8 @@ node tests/browser.mjs
 node tests/original-page.mjs
 ```
 
-已通过 16 项 Node 自动测试、原文件/交易函数回归检查、模拟 HTTP 服务、原页面交互和原生安装器测试。测试使用虚拟 CLI、模拟交易响应及临时浏览器 profile，没有执行真实交易或读取个人浏览器资料。真实双身份配对、链上交易/跟单及原 Chrome 侧边栏加载仍未验证。
+已通过 21 项本地 Node 自动测试、原文件/交易函数回归检查、模拟 HTTP 服务、原页面交互和原生安装器测试。测试使用虚拟 CLI、模拟交易响应及临时浏览器 profile，没有执行真实交易或读取个人浏览器资料。真实双身份配对、链上交易/跟单及原 Chrome 侧边栏加载仍未验证。
 
 不要提交任何钱包身份目录、会话、私钥、助记词、浏览器用户资料或 `.env`。朋友应在自己的设备上重新配对；发布包只包含静态程序、依赖、安装器和测试材料。
+
+Windows 版保留相同页面、交易逻辑、多钱包分组、跟单和 Debot CA 识别。Windows 专用改动为 `.cmd` 入口、CLI 路径查找、手动 HTTP/HTTPS 代理读取、用户安装/数据目录，以及跨平台的隔离模块 file URL。Windows runner 只用虚拟 CLI 验证安装与服务，不代表真实钱包配对、实盘或 Chrome 侧栏已通过验收。
