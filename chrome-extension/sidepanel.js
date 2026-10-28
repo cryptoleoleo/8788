@@ -53,33 +53,53 @@ function receiveCandidate(item) {
   else connect();
 }
 
-async function connect() {
-  status.textContent = '正在连接本机服务…';
-  retryButton.disabled = true;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000);
-  try {
-    const response = await fetch(`${BASE}/api/health`, {
-      cache: 'no-store', credentials: 'omit', redirect: 'error', signal: controller.signal
+let connecting = null;
+async function probeService() {
+  const response = await fetch(`${BASE}/api/launcher-status`, {
+    cache: 'no-store', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(1500),
+  });
+  if (!response.ok) throw new Error('本机服务尚未就绪');
+  const data = await response.json();
+  if (data.app !== 'baw-original-multi' || data.launcherProtocol !== 1) throw new Error('本机服务版本不支持按需启动，请运行新版安装器');
+}
+function requestBackgroundStart() {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('启动组件响应超时，请稍后重试')), 35000);
+    chrome.runtime.sendNativeMessage('com.baw.original_multi', { action: 'ensureStarted' }, response => {
+      clearTimeout(timeout);
+      if (chrome.runtime.lastError) return reject(new Error('未能连接本地启动组件，请先运行 1.4.0 配套安装器；升级 Node 后请重新安装组件。'));
+      if (!response?.ok) return reject(new Error(response?.error || '后台启动失败'));
+      resolve();
     });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const health = await response.json();
-    if (!health || health.ok !== true || String(health.chain) !== '56') throw new Error('Unexpected local service response');
-    serviceOnline = true;
-    status.textContent = health.session === 'CONNECTED' ? '钱包服务已连接' : '本机服务已启动';
-    offline.hidden = true;
-    frame.hidden = false;
-    if (!frame.src || frame.src === 'about:blank') frame.src = `${BASE}/`;
-    if (pendingCa) goToBaw(pendingCa);
-  } catch {
-    serviceOnline = false;
-    status.textContent = '等待本机服务';
-    frame.hidden = true;
-    offline.hidden = false;
-  } finally {
-    clearTimeout(timeout);
-    retryButton.disabled = false;
-  }
+  });
+}
+function connect() {
+  if (connecting) return connecting;
+  connecting = (async () => {
+    status.textContent = '正在连接本机服务…';
+    retryButton.disabled = true;
+    try {
+      try { await probeService(); }
+      catch {
+        status.textContent = '正在后台启动 BAW…';
+        await requestBackgroundStart();
+        await probeService();
+      }
+      serviceOnline = true;
+      status.textContent = '本机服务已就绪';
+      offline.hidden = true;
+      frame.hidden = false;
+      if (!frame.src || frame.src === 'about:blank') frame.src = `${BASE}/`;
+      if (pendingCa) goToBaw(pendingCa);
+    } catch (error) {
+      serviceOnline = false;
+      status.textContent = 'BAW 尚未就绪';
+      frame.hidden = true;
+      offline.hidden = false;
+      document.getElementById('startup-error').textContent = error.message;
+    } finally { retryButton.disabled = false; }
+  })().finally(() => { connecting = null; });
+  return connecting;
 }
 
 async function scanTokenPage() {

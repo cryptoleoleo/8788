@@ -2,29 +2,19 @@
 
 在提供的原版 BAW 页面与 Node 服务内增加独立 Binance Agentic Wallet 身份、钱包分组、分组买卖和跟单。保留原交易函数、交易档位及默认服务端口 8787，页面品牌仍为 8788。
 
-## Chrome 侧边栏扩展
+## 打开插件时按需启动（1.4.0）
 
-**CA 自动跟随修复 1.3.1（Mac / Windows 共用）：** [下载扩展 ZIP](releases/8788-GMGN-Debot-SidePanel-1.3.1.zip)、[SHA256](releases/8788-GMGN-Debot-SidePanel-1.3.1.zip.sha256)。补齐 Debot 网站权限和 URL 识别，支持 GMGN 分享前缀，直接从当前标签页 URL 提取 CA，避免旧标签页延迟响应覆盖新 CA。解压后选择直接含 `manifest.json` 的目录手动加载，停用旧扩展并刷新代币页。已有 Mac / Windows 服务包继续使用。详见 [更新说明与验证范围](chrome-extension/README.md#131-更新与验证)。这是对协作者新增扩展的修复，不是对最初截图原扩展来源的确认。
+首次运行配套安装器，注册 Chrome 本地启动组件，然后加载安装目录里的 `chrome-extension/`。
+以后打开侧栏自动后台启动 BAW，不需要手动打开终端。服务已运行时复用；端口冲突时提示，不强杀或改端口。
 
+- [Mac 完整安装包 rc4](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc4.zip)：运行原生安装器，Chrome 加载 `~/Applications/BAW-Original-Multi/chrome-extension`。
+- [Windows 完整安装包 rc4](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc4.zip)：运行 Install-Windows.cmd，Chrome 加载 `%LOCALAPPDATA%\BAW-Original-Multi\program\chrome-extension`。
+- [仅扩展 1.4.0](releases/8788-GMGN-Debot-SidePanel-1.4.0.zip)：需先安装上述本地组件；仅加载扩展无法唤起服务。
 
-`chrome-extension/` 是配套的 Chrome Manifest V3 侧边栏扩展源码，不修改原 BAW 页面或交易服务。扩展把现有本机 BAW 页面嵌入侧栏，并针对 GMGN 的 BSC 代币详情识别 CA：优先使用 `/bsc/token/0x…` 路由；页面弹出详情时，定位左上角折叠 CA 控件。只有唯一且可信的 CA 才自动送入本机 BAW 只读解析；无法明确定位时不猜、不显示多地址选择，也不触发买卖。
-
-`chrome-extension/` 目录使用 [MIT License](chrome-extension/LICENSE)，仅覆盖此扩展源码，不改变仓库其他文件的授权状态。
-
-### 安装
-
-1. Chrome 114 或更新版本打开 `chrome://extensions`，启用“开发者模式”。
-2. 选择“加载已解压的扩展程序”，选择本仓库的 `chrome-extension/` 目录。
-3. 允许扩展访问 `gmgn.ai`，打开 GMGN 的 BSC 代币详情页，再点击工具栏中的 **BAW Multiwallet** 图标打开侧栏。
-4. 本机 BAW 服务需在 `127.0.0.1:8787` 运行；扩展只负责把识别到的 CA 交给原 BAW 页面解析。
-
-Windows 也可解压 `releases/8788-GMGN-SidePanel-1.3.0.zip` 后运行其中的 `Open-BAW-Chrome-Extension.cmd`。该启动器会检查/启动本机服务、加载扩展并打开 GMGN。扩展只申请本机服务和 `gmgn.ai` 的权限，不读取其他网站，不自动交易。GMGN 会动态更新页面结构；当前开发环境无法直接读取其页面（HTTP 403），详情弹层识别尚未在 GMGN 实站完成验证。
-
-Mac 分发包：[Mac 1.0.0-rc2 ZIP](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip)，[SHA256](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip.sha256)。下载时使用 GitHub 文件页面的 **Download raw file**。
-
-Windows 分发包：[Windows 1.0.0-rc3 ZIP](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip)，[SHA256](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip.sha256)。完整解压后双击 `Install-Windows.cmd`，再运行 `%LOCALAPPDATA%\BAW-Original-Multi\program\Start-BAW.cmd`。需要 Windows x64、Node.js 24、Windows 本机安装的 CLI 1.11.0，不需要管理员权限。独立身份数据保存在同级 `data` 目录，程序更新时保留。详见包内 `Windows-先读我.txt` 和 [Windows 自动验证](https://github.com/cryptoleoleo/8788/actions/workflows/windows.yml)。
-
-旧扩展 1.3.0（不支持 Debot，建议使用上方 1.3.1）：[8788-GMGN-SidePanel-1.3.0 ZIP](releases/8788-GMGN-SidePanel-1.3.0.zip)，[SHA256](releases/8788-GMGN-SidePanel-1.3.0.zip.sha256)。源码以 `chrome-extension/` 为准。
+这些目录直接包含 manifest.json。停用旧扩展，允许 GMGN / Debot 网站访问。Node 升级导致路径变化后重新运行安装器。
+依赖仍为 Node.js 24、CLI 1.11.0；不复制钱包数据。首次配对、过期重连仍由本人完成。
+关闭侧栏不继续运行面板跟单；服务可能留在后台供再次打开时复用。没有设置登录系统自启动。
+扩展来源是协作者提交的现有版本，不代表找回了最初截图中的原插件。详见 [扩展说明](chrome-extension/README.md)。
 
 Mac 版解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
 

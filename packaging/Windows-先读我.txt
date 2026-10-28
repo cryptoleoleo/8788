@@ -1,32 +1,23 @@
-BAW 原程序多钱包增强版 · Windows 1.0.0-rc3
+BAW 按需启动完整包 · Windows 1.0.0-rc4 / 扩展 1.4.0
 
-Windows 版与 Mac 版使用同一套原版 BAW 页面与交易逻辑，包含：
-多 Binance Agentic Wallet 独立身份、钱包分组、勾选购买、跟单、Debot BSC 链接识别。
-原 Chrome 侧边栏扩展仍需朋友提供。本包没有 manifest.json，不能直接导入 Chrome。
+首次安装
+1. Windows x64，安装 Node.js 24 与 Windows 本机 CLI：
+   npm install -g @binance/agentic-wallet@1.11.0
+   不使用 WSL，不复制 Mac 的 CLI、钥匙串或身份数据。
+2. 完整解压，双击 Install-Windows.cmd。不需要管理员权限或修改 PowerShell 策略。
+   安装到 %LOCALAPPDATA%\BAW-Original-Multi\program。
+   安装器注册当前用户 HKCU 的 Chrome NativeMessagingHosts 项。
+   如果旧服务正在运行，先在原终端按 Ctrl+C；安装器不会杀进程。
+3. Chrome 打开 chrome://extensions，启用开发者模式，加载已解压的扩展程序。
+   选择 %LOCALAPPDATA%\BAW-Original-Multi\program\chrome-extension。
+   该目录直接包含 manifest.json。停用旧扩展，允许 GMGN / Debot 网站访问。
+4. 以后直接打开插件，后台自动启动服务，不用手动打开 Start-BAW.cmd。
+   若 Node 路径改变，重新运行安装器。安装窗口仅首次使用；日常不弹终端。
 
-准备环境
-使用 Windows 11 x64，或仍受支持、能运行 Node 24 的 Windows 10 x64 环境。
-安装 Windows x64 版 Node.js 24 LTS：https://nodejs.org/
-Node 24 支持平台说明：https://github.com/nodejs/node/blob/v24.13.0/BUILDING.md#platform-list
-在新打开的 Windows 终端中运行：
-  npm install -g @binance/agentic-wallet@1.11.0
-不要把 Mac 上安装的 CLI 或钥匙串复制到 Windows；Windows 的 CLI 必须本机安装。
-不要在 WSL 终端中运行这个 Windows 启动器。
+服务默认 8787；不改原交易逻辑。关闭侧栏不会继续面板跟单；
+服务可能仍在后台运行，再次打开插件复用。不会开机自启动、自动配对或交易。
+本包包含协作者扩展，并非对最初截图原扩展来源的确认。
 
-安装
-1. 完整解压 ZIP，保留 Install-Windows.cmd 与 program 文件夹的相对位置。
-2. 双击 Install-Windows.cmd；不需要管理员权限，不需要修改 PowerShell 执行策略。
-3. 安装到当前用户目录：
-   %LOCALAPPDATA%\BAW-Original-Multi\program
-   安装器会逐文件校验。旧版必须有本程序标记才能覆盖；更新前会自动备份，保留配置。
-   不复制包外的登录数据；安装完成不会自动启动服务或进行钱包操作。
-4. 进入上述目录，双击 Start-BAW.cmd。保留窗口，Ctrl+C 停止服务。
-   默认地址仍是 http://127.0.0.1:8787，不会因为名称为 8788 自动切换端口。
-   端口占用时会退出，请辨认原服务并在其自己的窗口停止；不会自动结束其他进程。
-
-使用
-已有真正原扩展时继续使用其侧栏入口，并核对地址配置。
-尚无原扩展时，浏览器打开服务地址可验收原程序页面；这不代表原侧栏加载验证完成。
 进入“钱包”页添加独立身份，逐一在对应 Binance App 完成配对，然后检查 BSC 地址。
 在“交易”页勾选钱包或分组，买入档位是每钱包金额，确认后按原流程依次执行。
 “跟单”页保存不会启动，新任务默认预演，运行时面板需要保持打开。

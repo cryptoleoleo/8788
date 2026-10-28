@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "BAW Multiwallet 侧边栏",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "在 Chrome 侧边栏显示 BAW，并跟随 GMGN / Debot 的 BSC 代币 URL 识别 CA。",
   "minimum_chrome_version": "114",
   "permissions": [
     "sidePanel",
-    "scripting"
+    "scripting",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "http://127.0.0.1/*",
@@ -41,5 +42,6 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8787; frame-src http://127.0.0.1:8787;"
-  }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzwI6kHbCtT1ymSiszkiwNmcRFsmIQ3HY7nyBnvalEikLe31rw21b3MJerIWoBR3uEjm2ZNuzNuBt2R7uKcxCsaMNjE0ZGFt4NnxoYfV25U0iaWOpibhV4MQawk1m6eohiAAFHouaPmTmLb2ZAMLER/0uAltb+GeCkpe/M7vSEJzoLYg9R5O9e3FGgAuHx224ln7ds1cmebr6D9lf9vdbkjTwXImtsL6RIdwgsxiPVl3gnFXo7XDxwJLPy8wn3r/yrlfO83JAqgpbCicz37KtQ7DwhqUoU6XNaeI5xSQxfu5I4QVlxggWcIuE8pWjb3EvKCItog4eR7t59ycC0b4GIQIDAQAB"
 }

@@ -6,7 +6,7 @@ struct InstallFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 let fm = FileManager.default
-let requiredFiles = [".baw-original-multi-package", "baw-oneclick/serve.mjs", "baw-oneclick/node_modules/ethers/package.json", "mac-launch.mjs", "mac-network.mjs", "runtime.zsh", "启动原版服务.command", "mac-options.json", "baw-oneclick/wallet-runtime.mjs", "baw-oneclick/wallet-features.js", "baw-oneclick/copy-feed.mjs", "baw-oneclick/profile-bootstrap.mjs", "baw-oneclick/profile-keytar.mjs", "baw-oneclick/multi-service.mjs", "baw-oneclick/multi-store.mjs", "baw-oneclick/wallet-features.css", "baw-oneclick/ca-input.mjs"]
+let requiredFiles = ["native-host.mjs", "native-install.mjs", "chrome-extension/manifest.json", ".baw-original-multi-package", "baw-oneclick/serve.mjs", "baw-oneclick/node_modules/ethers/package.json", "mac-launch.mjs", "mac-network.mjs", "runtime.zsh", "启动原版服务.command", "mac-options.json", "baw-oneclick/wallet-runtime.mjs", "baw-oneclick/wallet-features.js", "baw-oneclick/copy-feed.mjs", "baw-oneclick/profile-bootstrap.mjs", "baw-oneclick/profile-keytar.mjs", "baw-oneclick/multi-service.mjs", "baw-oneclick/multi-store.mjs", "baw-oneclick/wallet-features.css", "baw-oneclick/ca-input.mjs"]
 
 func validatePayload(_ root: URL) throws {
     for name in requiredFiles {
@@ -74,6 +74,22 @@ func install(payload: URL, destination: URL) throws -> URL? {
     return backup
 }
 
+func registerNative(destination: URL) throws {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+    process.arguments = ["-c", "source \"$1/runtime.zsh\"; baw_find_node || { print -u2 '请先安装 Node.js 24，再运行安装器'; exit 1; }; \"$BAW_RUNTIME_NODE\" \"$1/native-install.mjs\"", "baw-install", destination.path]
+    process.currentDirectoryURL = fm.homeDirectoryForCurrentUser
+    let output = Pipe()
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = output
+    try process.run()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+        let detail = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        throw InstallFailure(message: "程序已复制，但后台启动组件注册失败。\n" + detail)
+    }
+}
+
 func payloadURL() throws -> URL {
     guard let resources = Bundle.main.resourceURL else {
         throw InstallFailure(message: "无法定位应用资源，请双击完整的「安装 BAW 多钱包增强版.app」。")
@@ -98,25 +114,19 @@ func runUI() {
     let destination = fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications/BAW-Original-Multi")
     let prompt = NSAlert()
     prompt.messageText = "安装 BAW 原程序多钱包增强版"
-    prompt.informativeText = "将安装到你自己的用户目录：\n\(destination.path)\n\n在原版 BAW 页面与服务中增加独立身份、多钱包分组和跟单。未替换原交易函数。此包不含缺失的原 Chrome 扩展。\n\n需要 macOS 13.5+、Node.js 24 和 @binance/agentic-wallet 1.11.0。新增身份在钱包页逐个配对。"
+    prompt.informativeText = "将安装到你自己的用户目录：\n\(destination.path)\n\n在原版 BAW 页面与服务中增加独立身份、多钱包分组和跟单。未替换原交易函数。附带协作者扩展及按需启动组件；不代表找回最初截图的原扩展。\n\n需要 macOS 13.5+、Node.js 24 和 @binance/agentic-wallet 1.11.0。新增身份在钱包页逐个配对。"
     prompt.addButton(withTitle: "安装")
     prompt.addButton(withTitle: "取消")
     guard prompt.runModal() == .alertFirstButtonReturn else { return }
     do {
         let backup = try install(payload: payloadURL(), destination: destination)
+        try registerNative(destination: destination)
         let done = NSAlert()
         done.messageText = "BAW 多钱包增强版安装完成"
-        done.informativeText = "安装位置：\n\(destination.path)\n\n增强后的原程序位于 baw-oneclick 子目录。原包仅 3 个文件增加接入，其他 1881 个文件保持一致。保留启动后的终端窗口。已有原扩展可继续使用原入口；本包不能直接导入 Chrome。\n\n连接端口默认沿用原代码的 8787；如你的原入口使用其他端口，可在 mac-options.json 中配置。" + (backup == nil ? "" : "\n\n旧安装已备份到同级目录。")
-        done.addButton(withTitle: "启动原版服务")
-        done.addButton(withTitle: "查看文件")
-        let choice = done.runModal()
-        if choice == .alertFirstButtonReturn {
-            if !NSWorkspace.shared.open(destination.appendingPathComponent("启动原版服务.command")) {
-                showError("程序已安装。请在 Finder 中进入 \(destination.path)，双击「启动原版服务.command」。")
-            }
-        } else {
-            NSWorkspace.shared.open(destination)
-        }
+        done.informativeText = "安装位置：\n\(destination.path)\n\n已注册 Chrome 按需启动组件。请在 Chrome 扩展管理页选择“加载已解压的扩展程序”，选择安装目录里的 chrome-extension 文件夹，停用旧扩展。\n\n以后打开插件会自动后台启动，无需终端；首次配对及会话过期仍需本人连接钱包。关闭侧栏不会继续运行面板跟单。" + (backup == nil ? "" : "\n\n旧安装已备份到同级目录。")
+        done.addButton(withTitle: "查看扩展文件夹")
+        done.runModal()
+        NSWorkspace.shared.open(destination.appendingPathComponent("chrome-extension"))
     } catch { showError(error.localizedDescription) }
 }
 

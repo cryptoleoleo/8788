@@ -9,7 +9,9 @@ const debot = 'https://debot.ai/token/bsc/312069_' + ca;
 const gmgn = 'https://gmgn.ai/bsc/token/' + ca;
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
-function panel(url) {
+function panel(url, startup = {}) {
+  let online = startup.online !== false;
+  let nativeCalls = 0;
   const elements = new Map();
   const listeners = {};
   const element = id => {
@@ -20,18 +22,18 @@ function panel(url) {
   const events = {};
   const event = name => ({ addListener(fn) { events[name] = fn; } });
   const context = vm.createContext({
-    URL, AbortController, setTimeout, clearTimeout, console,
+    URL, AbortController, AbortSignal, setTimeout, clearTimeout, console,
     document: { getElementById: element }, navigator: {},
-    fetch: async () => ({ ok: true, json: async () => ({ ok: true, chain: 56, session: 'CONNECTED' }) }),
+    fetch: async () => { if (!online) throw Error('offline'); return { ok: true, json: async () => ({ ok: true, app: 'baw-original-multi', launcherProtocol: 1 }) }; },
     chrome: {
       tabs: { query: async () => [active], get: async () => active, sendMessage: async () => { throw Error('No content script'); }, onActivated: event('activated'), onUpdated: event('updated') },
       scripting: { executeScript: async () => { throw Error('Cannot inject into fixture'); } },
-      runtime: { onMessage: event('message') },
+      runtime: { onMessage: event('message'), sendNativeMessage(host, message, callback) { nativeCalls++; assert.equal(host, 'com.baw.original_multi'); assert.equal(message.action, 'ensureStarted'); if (startup.error) callback({ ok: false, error: startup.error }); else { online = true; callback({ ok: true }); } } },
     },
   });
   const html = readFileSync(new URL('sidepanel.html', root), 'utf8');
   for (const [, file] of html.matchAll(/<script src="([^"]+)"/g)) vm.runInContext(readFileSync(new URL(file, root), 'utf8'), context);
-  return { context, elements, events, setActive(tab) { active = tab; } };
+  return { context, elements, events, nativeCalls: () => nativeCalls, setActive(tab) { active = tab; } };
 }
 
 for (const url of [debot, gmgn, gmgn.replace('/token/', '/token/MjhhuWaq_')]) {
@@ -120,4 +122,20 @@ test('content watcher follows Debot and GMGN history changes without reading pag
   location.href = gmgn.replace('/bsc/', '/eth/');
   callbacks.popstate();
   assert.equal(published.at(-1).candidate, null);
+});
+
+
+test('opening an offline panel requests native startup once and then shows BAW', async () => {
+  const p = panel(debot, { online: false }); await tick();
+  assert.equal(p.nativeCalls(), 1);
+  assert.equal(p.elements.get('dashboard').hidden, false);
+  assert.equal(new URL(p.elements.get('dashboard').src).searchParams.get('ca'), ca);
+  p.events.activated({ tabId: 1 }); await tick();
+  assert.equal(p.nativeCalls(), 1);
+});
+test('native startup error is shown without exposing the offline frame', async () => {
+  const p = panel(debot, { online: false, error: '8787 端口已被占用' }); await tick();
+  assert.equal(p.elements.get('startup-error').textContent, '8787 端口已被占用');
+  assert.equal(p.elements.get('dashboard').hidden, true);
+  assert.equal(p.nativeCalls(), 1);
 });

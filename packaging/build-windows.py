@@ -3,7 +3,7 @@
 import hashlib, json, shutil, tempfile, zipfile
 from pathlib import Path
 root = Path(__file__).resolve().parent.parent
-name = 'BAW-Original-Multiwallet-Windows-1.0.0-rc3'
+name = 'BAW-Original-Multiwallet-Windows-1.0.0-rc4'
 output = Path.home() / 'Downloads' / (name + '.zip')
 if output.exists(): raise RuntimeError('Refusing to overwrite an existing release: ' + str(output))
 baseline = json.loads((root / 'original-sha256.json').read_text())
@@ -12,7 +12,8 @@ windows = ['Start-BAW.cmd', 'windows-launch.mjs', 'windows-runtime.mjs', 'window
 with tempfile.TemporaryDirectory(prefix='baw-windows-package-') as temporary:
     bundle = Path(temporary) / name
     program = bundle / 'program'
-    paths = list(baseline) + ['baw-oneclick/' + f for f in shared] + windows
+    extension_files = ['manifest.json', 'service-worker.js', 'token-url.js', 'gmgn-content.js', 'sidepanel.html', 'sidepanel.js', 'sidepanel.css', 'README.md', 'LICENSE']
+    paths = list(baseline) + ['baw-oneclick/' + f for f in shared] + windows + ['native-host.mjs', 'native-install.mjs'] + ['chrome-extension/' + f for f in extension_files]
     manifest = {}
     for relative in paths:
         source = root / relative

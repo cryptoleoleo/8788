@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 stage = Path(tempfile.mkdtemp(prefix='baw-multi-dist-'))
-bundle = stage / 'BAW-Original-Multiwallet-Mac-1.0.0-rc2'
+bundle = stage / 'BAW-Original-Multiwallet-Mac-1.0.0-rc4'
 app = bundle / '安装 BAW 多钱包增强版.app'
 contents = app / 'Contents'
 program = contents / 'Resources/program'
@@ -15,20 +15,21 @@ baseline = json.loads((root / 'original-sha256.json').read_text())
 additions = ['ca-input.mjs', 'copy-feed.mjs', 'multi-service.mjs', 'multi-store.mjs', 'profile-bootstrap.mjs',
              'profile-keytar.mjs', 'wallet-features.css', 'wallet-features.js', 'wallet-runtime.mjs']
 outer = ['mac-launch.mjs', 'mac-network.mjs', 'runtime.zsh', 'mac-options.json', '启动原版服务.command']
-paths = list(baseline) + ['baw-oneclick/' + name for name in additions] + outer
+extension_files = ['manifest.json', 'service-worker.js', 'token-url.js', 'gmgn-content.js', 'sidepanel.html', 'sidepanel.js', 'sidepanel.css', 'README.md', 'LICENSE']
+paths = list(baseline) + ['baw-oneclick/' + name for name in additions] + outer + ['native-host.mjs', 'native-install.mjs'] + ['chrome-extension/' + f for f in extension_files]
 for relative in paths:
     source = root / relative
     assert source.is_file() and not source.is_symlink(), relative
     target = program / relative
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
-(program / '.baw-original-multi-package').write_text('BAW Original Multi 1.0.0-rc2\n')
+(program / '.baw-original-multi-package').write_text('BAW Original Multi 1.0.0-rc4\n')
 (program / '启动原版服务.command').chmod(0o755)
 for name in ['先读我.txt', '改动与验收.txt']:
     shutil.copy2(root / 'packaging' / name, bundle / name)
 dev = bundle / '开发与验证'
 dev.mkdir()
-shutil.copytree(root / 'tests', dev / 'tests', ignore=shutil.ignore_patterns('__pycache__', 'windows*.mjs'))
+shutil.copytree(root / 'tests', dev / 'tests', ignore=shutil.ignore_patterns('__pycache__', 'windows*.mjs', 'native-launch.test.mjs', 'extension-url.test.mjs'))
 shutil.copy2(root / 'original-sha256.json', dev / 'original-sha256.json')
 shutil.copy2(root / 'packaging/Installer.swift', dev / 'Installer.swift')
 shutil.copy2(root / 'packaging/build.py', dev / 'build.py')
@@ -41,7 +42,7 @@ subprocess.run(['/usr/bin/lipo', '-create', str(stage / 'arm64'), str(stage / 'x
 (contents / 'Info.plist').write_bytes(plistlib.dumps({
     'CFBundleIdentifier': 'local.baw.originalmulti.installer', 'CFBundleName': '安装 BAW 多钱包增强版',
     'CFBundleExecutable': 'BAWInstaller', 'CFBundlePackageType': 'APPL',
-    'CFBundleShortVersionString': '1.0.0', 'CFBundleVersion': '2',
+    'CFBundleShortVersionString': '1.0.0', 'CFBundleVersion': '4',
     'LSMinimumSystemVersion': '13.5', 'NSHighResolutionCapable': True,
 }))
 subprocess.run(['/usr/bin/codesign', '--force', '--deep', '--sign', '-', str(app)], check=True)

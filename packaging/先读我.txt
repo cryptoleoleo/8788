@@ -1,28 +1,22 @@
-BAW 原程序多钱包增强版 · Mac 1.0.0-rc2（集成验收版）
+BAW 按需启动完整包 · Mac 1.0.0-rc4 / 扩展 1.4.0
 
-这是在朋友提供的原版 BAW 页面和 Node 服务中增加多钱包与跟单的版本。
-没有新建 Chrome 扩展外壳，没有 iframe 替代插件，也没有更改 8788 品牌。
-原 Chrome 扩展文件仍未提供：本 ZIP 没有 manifest.json，没有可直接导入 Chrome 的目录。
-因此它是完整的增强版程序与 Mac 安装包，不是完整原版侧边栏插件分发包。
+首次安装
+1. macOS 13.5+；先安装 Node.js 24 和 Binance Agentic Wallet CLI 1.11.0。
+   CLI 安装命令：npm install -g @binance/agentic-wallet@1.11.0
+2. 解压，运行“安装 BAW 多钱包增强版.app”。安装在 ~/Applications/BAW-Original-Multi。
+   安装器在当前用户 Chrome NativeMessagingHosts 目录注册启动组件，无需管理员权限。
+   安装器未做 Apple 公证；按系统正常提示允许运行，不要关闭系统安全设置。
+   如果旧服务正在运行，先在原终端按 Control+C，安装器不会杀进程。
+3. Chrome 打开 chrome://extensions，启用开发者模式，加载已解压的扩展程序。
+   选择 ~/Applications/BAW-Original-Multi/chrome-extension（直接包含 manifest.json）。
+   停用旧扩展；新版固定扩展 ID，升级时始终使用安装目录里的这一份。
+4. 允许 GMGN / Debot 网站访问权限。以后直接打开插件，后台自动启动 BAW，无需终端。
+   若 Node 升级后路径变化，重新运行安装器注册组件。
 
-安装与启动
-1. 本包面向 macOS 13.5 或更新系统（Apple 芯片 / Intel）。
-   安装 Node.js 24 LTS：https://nodejs.org/
-   Node 24 的系统要求见：https://github.com/nodejs/node/blob/v24.13.0/BUILDING.md#platform-list
-   多身份适配目前锁定 Binance CLI 1.11.0；在终端运行：
-   npm install -g @binance/agentic-wallet@1.11.0
-   若已有其他版本，请先确认是否要切换；安装器不会替你升级或降级全局 CLI。
-2. 解压 ZIP，双击“安装 BAW 多钱包增强版.app”。
-   安装到 ~/Applications/BAW-Original-Multi，不覆盖 BAW-Original-Mac 或之前的错误插件目录。
-   安装器使用本地临时签名，未做 Apple 公证。若系统阻止打开，可按 macOS 的提示在
-   “系统设置 → 隐私与安全性”中确认此本地安装器。不要关闭系统安全设置。
-3. 点击安装器中的“启动原版服务”，或双击安装目录中的“启动原版服务.command”。
-   保留终端窗口；Control+C 只停止此启动窗口中的服务。
-   默认地址沿用原代码：http://127.0.0.1:8787。
-   端口占用会退出；请先辨认原进程，在原启动窗口停止它，不会自动杀进程或切换到 8788。
-4. 已有真正原扩展的用户继续使用原来的侧边栏入口，并核对原扩展配置地址。
-   暂无原扩展时，可用终端打印的地址验收原程序页面；这不等于原侧边栏加载通过。
-   只有确认原扩展确实使用其他端口时，才在 mac-options.json 中把 port:null 改为对应数字。
+服务默认 8787；不改钱包、交易参数或身份数据。关闭侧栏不会继续面板跟单；
+服务可能仍在后台运行，再次打开插件复用。组件不是开机自启动，不会自动配对或交易。
+本包包含协作者已提交扩展，并非对最初截图原扩展来源的确认。
+保留手动启动命令用于排查；日常无需使用。
 
 多钱包
 进入“钱包”页，点击“添加身份”，填写名称并选择分组。

@@ -22,7 +22,7 @@ try {
     console.log(`启动 BAW 原程序 Windows 多钱包版：http://127.0.0.1:${port}`);
     console.log('保留此窗口，Ctrl+C 停止。原 Chrome 扩展另行提供，本包没有替代扩展外壳。');
     if (env.NODE_USE_ENV_PROXY === '1') console.log('网络：沿用 HTTP/HTTPS 代理，本机连接直连。');
-    const child = spawn(process.execPath, ['serve.mjs'], { cwd: join(root, 'baw-oneclick'), env, stdio: 'inherit', windowsHide: false });
+    const child = spawn(process.execPath, ['serve.mjs'], { cwd: join(root, 'baw-oneclick'), env, stdio: 'inherit', windowsHide: process.env.BAW_BACKGROUND === '1' });
     let ended = false;
     child.on('error', error => { ended = true; console.error(error.message); process.exitCode = 1; });
     child.on('exit', code => { ended = true; process.exitCode = code || 0; });

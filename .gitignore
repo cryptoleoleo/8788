@@ -15,3 +15,9 @@ identities/
 *.pem
 *.key
 __pycache__/
+
+# Generated native host registration and startup locks (machine-specific).
+native-host.cmd
+native-host.command
+com.baw.original_multi.json
+.native-start.lock

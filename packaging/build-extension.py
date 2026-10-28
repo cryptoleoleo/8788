@@ -11,8 +11,7 @@ version = json.loads((source / 'manifest.json').read_text())['version']
 name = '8788-GMGN-Debot-SidePanel-' + version
 output = root / 'releases' / (name + '.zip')
 files = ['manifest.json', 'service-worker.js', 'token-url.js', 'gmgn-content.js',
-         'sidepanel.html', 'sidepanel.js', 'sidepanel.css', 'README.md', 'LICENSE',
-         'Open-BAW-Chrome-Extension.cmd']
+         'sidepanel.html', 'sidepanel.js', 'sidepanel.css', 'README.md', 'LICENSE']
 if output.exists():
     raise RuntimeError('Refusing to overwrite an existing release: ' + str(output))
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

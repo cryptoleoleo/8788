@@ -3,6 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { installNative } from './native-install.mjs';
 import { assertPortFree, readWindowsOptions, requireNode24, selectedPort } from './windows-runtime.mjs';
 
 const marker = '.baw-original-multi-windows-package';
@@ -66,7 +67,11 @@ if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.m
     }
     const result = await installWindows({ source, destination });
     console.log('安装完成：' + result.destination);
-    console.log('请打开该目录，双击 Start-BAW.cmd。安装器没有启动服务或访问钱包。');
+    if (!args.includes('--install-only')) {
+      const native = installNative(result.destination);
+      console.log('后台启动已注册。Chrome 加载目录：' + native.extensionDirectory);
+    }
+    console.log('安装器没有启动服务或访问钱包；加载扩展后会按需后台启动。');
     if (result.backup) console.log('旧程序已备份：' + result.backup);
   } catch (error) { console.error('安装未完成：' + error.message); process.exitCode = 1; }
 }

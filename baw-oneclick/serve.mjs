@@ -1373,6 +1373,9 @@ async function handleRequest(req, res) {
   try {
     const url = new URL(req.url, 'http://localhost');
 
+    // Readiness probe for the local launcher; does not invoke the wallet CLI.
+    if (url.pathname === '/api/launcher-status' && req.method === 'GET') return json(res, 200, { app: 'baw-original-multi', launcherProtocol: 1 });
+
     if (url.pathname === '/api/health') return await apiHealth(req, res);
 
     if (url.pathname.startsWith('/api/')) {
