@@ -27,6 +27,7 @@ test('native registration pins only the distributed extension and quotes spaced 
     assert.match(readFileSync(mac.wrapper, 'utf8'), /exec '/);
     const win = installNative(dir, { platform: 'win32', register: false });
     assert.match(readFileSync(win.wrapper, 'utf8'), /DisableDelayedExpansion/);
+    assert.match(readFileSync(win.wrapper, 'utf8'), /chcp 65001 >nul/);
     assert.ok(readFileSync(win.wrapper, 'utf8').includes(process.execPath));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

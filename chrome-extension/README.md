@@ -1,4 +1,4 @@
-# BAW Chrome 扩展 1.4.0：打开即后台启动
+# BAW Chrome 扩展 1.4.1：打开即后台启动
 
 这是协作者已提交扩展的按需启动更新，不代表找回了最初截图中的原扩展。
 原 BAW 页面、钱包和交易逻辑保持不变。
@@ -6,7 +6,7 @@
 ## 首次安装（Mac / Windows）
 
 1. 安装 Node.js 24、Binance Agentic Wallet CLI 1.11.0。
-2. 使用配套完整包：Mac rc4 运行原生安装器；Windows rc4 运行 Install-Windows.cmd。
+2. 使用配套完整包：Mac rc5 运行原生安装器；Windows rc5 运行 Install-Windows.cmd。
    安装器只注册当前用户 Chrome 的 Native Messaging 启动组件，不设置开机启动。
 3. Chrome 扩展管理页加载安装目录里的 `chrome-extension/`（直接包含 `manifest.json`），停用旧版本：
    - Mac：`~/Applications/BAW-Original-Multi/chrome-extension`

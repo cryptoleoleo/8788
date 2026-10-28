@@ -1,4 +1,4 @@
-BAW 按需启动完整包 · Windows 1.0.0-rc4 / 扩展 1.4.0
+BAW 按需启动完整包 · Windows 1.0.0-rc5 / 扩展 1.4.1
 
 首次安装
 1. Windows x64，安装 Node.js 24 与 Windows 本机 CLI：

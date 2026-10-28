@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 stage = Path(tempfile.mkdtemp(prefix='baw-multi-dist-'))
-bundle = stage / 'BAW-Original-Multiwallet-Mac-1.0.0-rc4'
+bundle = stage / 'BAW-Original-Multiwallet-Mac-1.0.0-rc5'
 app = bundle / '安装 BAW 多钱包增强版.app'
 contents = app / 'Contents'
 program = contents / 'Resources/program'
@@ -23,7 +23,7 @@ for relative in paths:
     target = program / relative
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
-(program / '.baw-original-multi-package').write_text('BAW Original Multi 1.0.0-rc4\n')
+(program / '.baw-original-multi-package').write_text('BAW Original Multi 1.0.0-rc5\n')
 (program / '启动原版服务.command').chmod(0o755)
 for name in ['先读我.txt', '改动与验收.txt']:
     shutil.copy2(root / 'packaging' / name, bundle / name)
@@ -42,7 +42,7 @@ subprocess.run(['/usr/bin/lipo', '-create', str(stage / 'arm64'), str(stage / 'x
 (contents / 'Info.plist').write_bytes(plistlib.dumps({
     'CFBundleIdentifier': 'local.baw.originalmulti.installer', 'CFBundleName': '安装 BAW 多钱包增强版',
     'CFBundleExecutable': 'BAWInstaller', 'CFBundlePackageType': 'APPL',
-    'CFBundleShortVersionString': '1.0.0', 'CFBundleVersion': '4',
+    'CFBundleShortVersionString': '1.0.0', 'CFBundleVersion': '5',
     'LSMinimumSystemVersion': '13.5', 'NSHighResolutionCapable': True,
 }))
 subprocess.run(['/usr/bin/codesign', '--force', '--deep', '--sign', '-', str(app)], check=True)

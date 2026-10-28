@@ -30,12 +30,12 @@ jobs:
         id: package
         shell: pwsh
         run: |
-          $zip = Join-Path $PWD 'releases/BAW-Original-Multiwallet-Windows-1.0.0-rc4.zip'
+          $zip = Join-Path $PWD 'releases/BAW-Original-Multiwallet-Windows-1.0.0-rc5.zip'
           $expected = ((Get-Content -LiteralPath ($zip + '.sha256')) -split ' ')[0]
           if ((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw 'ZIP checksum mismatch' }
           $target = Join-Path $env:RUNNER_TEMP 'BAW expanded 中文 & spaces'
           Expand-Archive -LiteralPath $zip -DestinationPath $target
-          $package = Join-Path $target 'BAW-Original-Multiwallet-Windows-1.0.0-rc4'
+          $package = Join-Path $target 'BAW-Original-Multiwallet-Windows-1.0.0-rc5'
           "BAW_WINDOWS_PACKAGE=$package" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Copy-Item -LiteralPath (Join-Path $package 'program/baw-oneclick/node_modules') -Destination 'baw-oneclick/node_modules' -Recurse
       - name: Core regressions and Windows installer checks (fake wallets only)

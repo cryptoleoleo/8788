@@ -28,7 +28,7 @@ try {
     const body = Buffer.from(JSON.stringify({ action: 'ensureStarted' })), header = Buffer.alloc(4); header.writeUInt32LE(body.length);
     child.stdin.end(Buffer.concat([header,body]));
     child.on('error', reject);
-    child.on('close', () => { clearTimeout(timer); try { const output=Buffer.concat(chunks); assert.equal(output.readUInt32LE(),output.length-4,errors); resolveResult(JSON.parse(output.subarray(4))); } catch(e) { reject(e); } });
+    child.on('close', () => { clearTimeout(timer); try { const output=Buffer.concat(chunks); assert.ok(output.length >= 4, 'Native host produced no protocol response: ' + errors); assert.equal(output.readUInt32LE(),output.length-4,errors); resolveResult(JSON.parse(output.subarray(4))); } catch(e) { reject(e); } });
   });
   const started = await invoke(); assert.equal(started.ok,true,JSON.stringify(started)); assert.equal(started.status,'started'); pid=started.pid;
   await new Promise(r => setTimeout(r,500));

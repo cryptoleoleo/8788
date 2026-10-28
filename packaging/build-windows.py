@@ -3,7 +3,7 @@
 import hashlib, json, shutil, tempfile, zipfile
 from pathlib import Path
 root = Path(__file__).resolve().parent.parent
-name = 'BAW-Original-Multiwallet-Windows-1.0.0-rc4'
+name = 'BAW-Original-Multiwallet-Windows-1.0.0-rc5'
 output = Path.home() / 'Downloads' / (name + '.zip')
 if output.exists(): raise RuntimeError('Refusing to overwrite an existing release: ' + str(output))
 baseline = json.loads((root / 'original-sha256.json').read_text())

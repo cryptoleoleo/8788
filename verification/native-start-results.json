@@ -2,11 +2,11 @@
   "localTestsPassed": 35,
   "macServiceIntegration": "Original service launched in background on a temporary port and reused; fake CLI throws on any wallet invocation. Passed.",
   "macInstaller": "arm64 execution and arm64/x86_64 compilation; copying, backup and busy-port safeguards passed. Native registration tested in temporary home only.",
-  "windows": "CI pending",
+  "windows": "35 regressions and CMD service checks passed; native wrapper UTF-8 fix awaiting next CI.",
   "chrome": "Native Messaging wire protocol and extension lifecycle tested with simulated Chrome APIs. Actual Chrome extension loading not verified.",
   "transactions": "None. No real credentials, clipboard or browser profile read.",
   "files": {
-    "BAW-Original-Multiwallet-Mac-1.0.0-rc4.zip": "8dce545c5e7b9efc66bbfbe13b3a692073237edba44937cddfde5b74d5e08f59",
-    "BAW-Original-Multiwallet-Windows-1.0.0-rc4.zip": "84250c60a0a70300f6c82521b54c41522ca87c0bd58769a202a74f726dc4a55b"
+    "BAW-Original-Multiwallet-Mac-1.0.0-rc5.zip": "f868f21cea0be133b3a69035e91519efe0532ebd343100a6122c8a5001b7d3df",
+    "BAW-Original-Multiwallet-Windows-1.0.0-rc5.zip": "bb0abca3813707476f4ae3690a4c0fa3a5dfdb0d009e782d8fc6820494746d1f"
   }
 }

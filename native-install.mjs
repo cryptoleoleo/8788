@@ -22,7 +22,7 @@ export function installNative(root, { platform = process.platform, home = homedi
   const quote = s => "'" + s.replace(/'/g, "'\\''") + "'";
   const cmdQuote = s => '"' + s.replace(/%/g, '%%') + '"';
   const launcher = platform === 'win32'
-    ? '@echo off\r\nsetlocal DisableDelayedExpansion\r\n' + cmdQuote(process.execPath) + ' ' + cmdQuote(script) + ' %*\r\n'
+    ? '@echo off\r\nsetlocal DisableDelayedExpansion\r\nchcp 65001 >nul\r\n' + cmdQuote(process.execPath) + ' ' + cmdQuote(script) + ' %*\r\n'
     : '#!/bin/sh\nexec ' + quote(process.execPath) + ' ' + quote(script) + ' "$@"\n';
   writeFileSync(wrapper, launcher, { mode: 0o700 });
   const manifest = { name: HOST_NAME, description: 'Start the installed BAW service on demand', path: wrapper, type: 'stdio', allowed_origins: ['chrome-extension://' + id + '/'] };

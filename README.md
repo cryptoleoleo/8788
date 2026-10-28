@@ -2,14 +2,14 @@
 
 在提供的原版 BAW 页面与 Node 服务内增加独立 Binance Agentic Wallet 身份、钱包分组、分组买卖和跟单。保留原交易函数、交易档位及默认服务端口 8787，页面品牌仍为 8788。
 
-## 打开插件时按需启动（1.4.0）
+## 打开插件时按需启动（1.4.1）
 
 首次运行配套安装器，注册 Chrome 本地启动组件，然后加载安装目录里的 `chrome-extension/`。
 以后打开侧栏自动后台启动 BAW，不需要手动打开终端。服务已运行时复用；端口冲突时提示，不强杀或改端口。
 
-- [Mac 完整安装包 rc4](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc4.zip)：运行原生安装器，Chrome 加载 `~/Applications/BAW-Original-Multi/chrome-extension`。
-- [Windows 完整安装包 rc4](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc4.zip)：运行 Install-Windows.cmd，Chrome 加载 `%LOCALAPPDATA%\BAW-Original-Multi\program\chrome-extension`。
-- [仅扩展 1.4.0](releases/8788-GMGN-Debot-SidePanel-1.4.0.zip)：需先安装上述本地组件；仅加载扩展无法唤起服务。
+- [Mac 完整安装包 rc5](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc5.zip)：运行原生安装器，Chrome 加载 `~/Applications/BAW-Original-Multi/chrome-extension`。
+- [Windows 完整安装包 rc5](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc5.zip)：运行 Install-Windows.cmd，Chrome 加载 `%LOCALAPPDATA%\BAW-Original-Multi\program\chrome-extension`。
+- [仅扩展 1.4.1](releases/8788-GMGN-Debot-SidePanel-1.4.1.zip)：需先安装上述本地组件；仅加载扩展无法唤起服务。
 
 这些目录直接包含 manifest.json。停用旧扩展，允许 GMGN / Debot 网站访问。Node 升级导致路径变化后重新运行安装器。
 依赖仍为 Node.js 24、CLI 1.11.0；不复制钱包数据。首次配对、过期重连仍由本人完成。

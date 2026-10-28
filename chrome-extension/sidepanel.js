@@ -67,7 +67,7 @@ function requestBackgroundStart() {
     const timeout = setTimeout(() => reject(new Error('启动组件响应超时，请稍后重试')), 35000);
     chrome.runtime.sendNativeMessage('com.baw.original_multi', { action: 'ensureStarted' }, response => {
       clearTimeout(timeout);
-      if (chrome.runtime.lastError) return reject(new Error('未能连接本地启动组件，请先运行 1.4.0 配套安装器；升级 Node 后请重新安装组件。'));
+      if (chrome.runtime.lastError) return reject(new Error('未能连接本地启动组件，请先运行 1.4.1 配套安装器；升级 Node 后请重新安装组件。'));
       if (!response?.ok) return reject(new Error(response?.error || '后台启动失败'));
       resolve();
     });
