@@ -12,6 +12,7 @@ let serviceOnline = false;
 let activeTabId = null;
 let pendingCa = null;
 let lastParsedCa = null;
+let scanRevision = 0;
 
 function clearDetectedCa(message) {
   pendingCa = null;
@@ -34,7 +35,7 @@ function goToBaw(ca) {
 function receiveCandidate(item) {
   const ca = String(item?.address || '').toLowerCase();
   if (!item?.precise || !/^0x[a-f0-9]{40}$/.test(ca) || /^0x0{40}$/.test(ca)) {
-    clearDetectedCa('暂未精准定位到唯一 CA；打开 GMGN 的 BSC 代币详情后会继续自动识别。');
+    clearDetectedCa('暂未精准定位到唯一 CA；打开 GMGN / Debot 的 BSC 代币详情后会继续自动识别。');
     return;
   }
   caValue.textContent = ca;
@@ -81,39 +82,39 @@ async function connect() {
   }
 }
 
-async function getActiveTab(tabId) {
-  if (Number.isInteger(tabId)) {
-    try { return await chrome.tabs.get(tabId); } catch { /* tab closed */ }
-  }
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  return tab;
-}
-
-async function scanGmgn(tabId) {
+async function scanTokenPage() {
+  const revision = ++scanRevision;
+  // Do not let a pending connection send the previous tab's CA while this scan awaits.
+  pendingCa = null;
   try {
-    const tab = await getActiveTab(tabId);
-    if (!Number.isInteger(tab?.id)) throw new Error('没有活动标签页');
-    activeTabId = tab.id;
-    if (!tab.url) {
-      clearDetectedCa('切到 GMGN 的 BSC 代币详情页后会自动抓取 CA。');
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (revision !== scanRevision) return;
+    activeTabId = tab?.id ?? null;
+    const page = bawTokenPage(tab?.url);
+    if (!Number.isInteger(tab?.id) || !page || (!page.address && !page.allowDomScan)) {
+      clearDetectedCa('切到 GMGN / Debot 的 BSC 代币详情页后会自动识别 CA。');
       return;
     }
-    const url = new URL(tab.url);
-    if (url.hostname !== 'gmgn.ai' || url.protocol !== 'https:') {
-      clearDetectedCa('切到 GMGN 的 BSC 代币详情页后会自动抓取 CA。');
+    // The URL is authoritative: it works even if the page has not finished loading
+    // or the content script was not injected into an already-open tab.
+    if (page.address) {
+      receiveCandidate({ address: page.address, precise: true });
       return;
     }
-    gmgnStatus.textContent = '正在精准识别 GMGN 当前代币…';
+    gmgnStatus.textContent = '正在识别 GMGN 当前代币…';
     let response;
     try {
       response = await chrome.tabs.sendMessage(tab.id, { type: 'BAW_GMGN_SCAN' });
     } catch {
-      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['gmgn-content.js'] });
+      if (revision !== scanRevision) return;
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['token-url.js', 'gmgn-content.js'] });
+      if (revision !== scanRevision) return;
       response = await chrome.tabs.sendMessage(tab.id, { type: 'BAW_GMGN_SCAN' });
     }
+    if (revision !== scanRevision) return;
     receiveCandidate(response?.candidate);
   } catch {
-    clearDetectedCa('无法读取 GMGN 当前页；刷新该标签页后再打开侧栏。');
+    if (revision === scanRevision) clearDetectedCa('无法读取当前页；请允许 GMGN / Debot 网站访问权限，刷新标签页后重试。');
   }
 }
 
@@ -122,7 +123,7 @@ document.getElementById('reload').addEventListener('click', () => {
   if (!frame.hidden) frame.src = frame.src;
   else connect();
 });
-document.getElementById('scan').addEventListener('click', () => scanGmgn());
+document.getElementById('scan').addEventListener('click', () => scanTokenPage());
 document.getElementById('copy-ca').addEventListener('click', async () => {
   if (!caValue.textContent) return;
   try {
@@ -135,12 +136,12 @@ document.getElementById('copy-ca').addEventListener('click', async () => {
 
 chrome.runtime.onMessage.addListener((message, sender) => {
   if (message?.type !== 'BAW_GMGN_CA_UPDATE' || sender.tab?.id !== activeTabId) return;
-  receiveCandidate(message.candidate);
+  scanTokenPage();
 });
-chrome.tabs.onActivated.addListener(({ tabId }) => scanGmgn(tabId));
+chrome.tabs.onActivated.addListener(() => scanTokenPage());
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (tabId === activeTabId && (changeInfo.status === 'complete' || changeInfo.url)) scanGmgn(tabId);
+  if (tabId === activeTabId && (changeInfo.status === 'complete' || changeInfo.url)) scanTokenPage();
 });
 
 connect();
-scanGmgn();
+scanTokenPage();

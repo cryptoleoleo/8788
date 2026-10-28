@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "date": "2026-10-28",
+  "extensionVersion": "1.3.1",
+  "baseline": "6918b87",
+  "regression": "Before fix: all 4 initial URL-following cases failed; after fix: all 8 extension cases passed. Full local suite: 29 passed.",
+  "checks": [
+    "Debot BSC URL including numeric prefix",
+    "GMGN BSC URL with and without share prefix",
+    "URL detection without an injected content script",
+    "active tab and SPA URL changes",
+    "reject non-BSC, spoofed host and malformed CA",
+    "reject stale previous-tab response",
+    "content watcher URL changes and no scan/message feedback loop",
+    "manifest permissions and script dependency order"
+  ],
+  "validationScope": "Real extension JavaScript executed with mocked Chrome APIs and DOM; local original service regression used fake wallets. No personal browser profile, clipboard or credentials accessed. No trades.",
+  "notVerified": [
+    "Extension loaded in user Chrome",
+    "Live GMGN / Debot pages",
+    "Real wallet parsing or transactions"
+  ],
+  "artifactSha256": "b0452271d564c92b3b1c7cd4443b5b7add764c8a72b957bc03a47600e61eb71f"
+}

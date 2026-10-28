@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BAW Multiwallet 侧边栏",
-  "version": "1.3.0",
-  "description": "在 Chrome 侧边栏显示 BAW，并精准识别 GMGN 的单个 BSC 代币 CA。",
+  "version": "1.3.1",
+  "description": "在 Chrome 侧边栏显示 BAW，并跟随 GMGN / Debot 的 BSC 代币 URL 识别 CA。",
   "minimum_chrome_version": "114",
   "permissions": [
     "sidePanel",
@@ -10,7 +10,10 @@
   ],
   "host_permissions": [
     "http://127.0.0.1/*",
-    "https://gmgn.ai/*"
+    "https://gmgn.ai/*",
+    "https://www.gmgn.ai/*",
+    "https://debot.ai/*",
+    "https://www.debot.ai/*"
   ],
   "action": {
     "default_title": "在侧边栏打开 BAW Multiwallet"
@@ -23,8 +26,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://gmgn.ai/*"],
-      "js": ["gmgn-content.js"],
+      "matches": [
+        "https://gmgn.ai/*",
+        "https://www.gmgn.ai/*",
+        "https://debot.ai/*",
+        "https://www.debot.ai/*"
+      ],
+      "js": [
+        "token-url.js",
+        "gmgn-content.js"
+      ],
       "run_at": "document_idle"
     }
   ],

@@ -4,7 +4,7 @@
   if (globalThis.__BAW_GMGN_CA_WATCHER__) return;
 
   const ADDRESS_RE = /0x[a-fA-F0-9]{40}/g;
-  const TOKEN_ROUTE_RE = /\/bsc\/token\/(0x[a-fA-F0-9]{40})(?:[/?#]|$)/i;
+  const TOKEN_ROUTE_RE = /^\/bsc\/token\/(?:[a-z0-9-]+_)?(0x[a-fA-F0-9]{40})\/?$/i;
   const SHORT_CA_RE = /0x[a-fA-F0-9]{4,12}(?:\.{3}|…|⋯)[a-fA-F0-9]{4,12}/;
   const TOKEN_LABEL_RE = /(?:\bCA\b|contract|token|合约|代币)/i;
   const WALLET_LABEL_RE = /(?:wallet|account|connect|portfolio|钱包|账户|余额|持仓)/i;
@@ -15,6 +15,9 @@
   let queuedTimer = 0;
 
   function scan() {
+    const page = bawTokenPage(location.href);
+    if (page?.address) return { address: page.address, precise: true, source: page.site + ' BSC 代币详情链接', score: 120 };
+    if (!page?.allowDomScan) return null;
     const candidates = new Map();
     function add(rawAddress, score, source, context = '', detailEvidence = false) {
       const address = String(rawAddress || '').toLowerCase();
@@ -136,7 +139,7 @@
   addEventListener('hashchange', () => publish(true));
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === 'BAW_GMGN_SCAN') {
-      sendResponse({ candidate: publish(true) });
+      sendResponse({ candidate: scan() });
     }
   });
 
