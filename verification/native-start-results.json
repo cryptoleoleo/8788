@@ -2,7 +2,23 @@
   "localTestsPassed": 35,
   "macServiceIntegration": "Original service launched in background on a temporary port and reused; fake CLI throws on any wallet invocation. Passed.",
   "macInstaller": "arm64 execution and arm64/x86_64 compilation; copying, backup and busy-port safeguards passed. Native registration tested in temporary home only.",
-  "windows": "35 regressions and CMD service checks passed; native wrapper UTF-8 fix awaiting next CI.",
+  "windows": {
+    "passed": true,
+    "runner": "Windows Server 2025 x64",
+    "node": "24.13.0",
+    "testedCommit": "23cd0e86744ccdfeba516d6f4109bda75fb69b70",
+    "runUrl": "https://github.com/cryptoleoleo/8788/actions/runs/40656882835",
+    "checks": [
+      "35 regressions passed",
+      "CMD installer and existing service checks passed",
+      "HKCU native host registration",
+      "UTF-8 Chinese/spaced path wrapper",
+      "binary native message framing",
+      "detached service survives native host exit",
+      "second request reuses service",
+      "fake CLI forbids all wallet invocations"
+    ]
+  },
   "chrome": "Native Messaging wire protocol and extension lifecycle tested with simulated Chrome APIs. Actual Chrome extension loading not verified.",
   "transactions": "None. No real credentials, clipboard or browser profile read.",
   "files": {

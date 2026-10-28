@@ -14,6 +14,8 @@
 这些目录直接包含 manifest.json。停用旧扩展，允许 GMGN / Debot 网站访问。Node 升级导致路径变化后重新运行安装器。
 依赖仍为 Node.js 24、CLI 1.11.0；不复制钱包数据。首次配对、过期重连仍由本人完成。
 关闭侧栏不继续运行面板跟单；服务可能留在后台供再次打开时复用。没有设置登录系统自启动。
+
+验证：35 项本地回归、Mac 原服务后台启动/复用、原生安装器检查通过。[Windows CI](https://github.com/cryptoleoleo/8788/actions/runs/40656882835) 已验证中文路径、HKCU 注册、原生消息、隐藏启动及宿主退出后的服务存活。使用虚拟 CLI，未访问真实钱包；真实 Chrome 加载仍待手动验收。请使用 rc5 / 扩展 1.4.1，rc4 的 Windows 原生启动有中文路径问题。
 扩展来源是协作者提交的现有版本，不代表找回了最初截图中的原插件。详见 [扩展说明](chrome-extension/README.md)。
 
 Mac 版解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
