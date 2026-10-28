@@ -1,0 +1,27 @@
+:root { color-scheme: dark; font: 12px/1.4 "Segoe UI", "Microsoft YaHei", sans-serif; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0b0e14; color: #edf1f5; }
+body { display: flex; flex-direction: column; }
+header { flex: 0 0 50px; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid #27303b; background: #111720; }
+.mark { display: grid; place-items: center; flex: 0 0 32px; height: 32px; border-radius: 10px; color: #171b22; background: #f0b90b; font-weight: 800; font-size: 17px; }
+.heading { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.heading strong { font-size: 13px; }
+#status { color: #9aa7b6; font-size: 11px; }
+header button, #retry { border: 1px solid #344150; border-radius: 8px; padding: 6px 10px; color: #e6ebf1; background: #1c2631; cursor: pointer; }
+header button { width: 32px; height: 32px; padding: 0; font-size: 20px; }
+#gmgn-detector { flex: 0 0 auto; max-height: 34%; overflow: auto; padding: 8px 10px; border-bottom: 1px solid #27303b; background: #0e141c; }
+.detector-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.detector-head strong { font-size: 12px; }
+#scan, #copy-ca { border: 1px solid #344150; border-radius: 7px; padding: 4px 8px; color: #e6ebf1; background: #1c2631; cursor: pointer; }
+#gmgn-status { color: #cbd5e1; overflow-wrap: anywhere; }
+#current-ca { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+#current-ca[hidden] { display: none; }
+#current-ca code { flex: 1; min-width: 0; overflow-wrap: anywhere; color: #f0b90b; font-size: 11px; }
+#gmgn-detector small { display: block; margin-top: 5px; color: #8492a3; font-size: 10px; }
+main { flex: 1; min-height: 0; position: relative; }
+iframe { display: block; width: 100%; height: 100%; border: 0; background: #0b0e14; }
+#offline { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 8px; padding: 20px; text-align: center; color: #b8c1cc; }
+#offline[hidden], iframe[hidden] { display: none; }
+.offline-title { color: #f2f4f7; font-size: 15px; font-weight: 700; }
+#offline p { margin: 0; }
+#retry { margin-top: 6px; border-color: #d6a30b; color: #191b1f; background: #f0b90b; font-weight: 700; }
