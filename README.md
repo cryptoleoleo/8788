@@ -21,7 +21,7 @@ Mac 分发包：[Mac 1.0.0-rc2 ZIP](releases/BAW-Original-Multiwallet-Mac-1.0.0-
 
 Windows 分发包：[Windows 1.0.0-rc3 ZIP](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip)，[SHA256](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip.sha256)。完整解压后双击 `Install-Windows.cmd`，再运行 `%LOCALAPPDATA%\BAW-Original-Multi\program\Start-BAW.cmd`。需要 Windows x64、Node.js 24、Windows 本机安装的 CLI 1.11.0，不需要管理员权限。独立身份数据保存在同级 `data` 目录，程序更新时保留。详见包内 `Windows-先读我.txt` 和 [Windows 自动验证](https://github.com/cryptoleoleo/8788/actions/workflows/windows.yml)。
 
-GMGN 侧栏分发包：[8788-GMGN-SidePanel-1.3.0 ZIP](releases/8788-GMGN-SidePanel-1.3.0.zip)，[SHA256](releases/8788-GMGN-SidePanel-1.3.0.zip.sha256)。源码以 `chrome-extension/` 为准。
+Windows 版本 最新版本 插件 在此处 最上面一版本不必下载 ：[8788-GMGN-SidePanel-1.3.0 ZIP](releases/8788-GMGN-SidePanel-1.3.0.zip)，[SHA256](releases/8788-GMGN-SidePanel-1.3.0.zip.sha256)。源码以 `chrome-extension/` 为准。
 
 Mac 版解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
 
