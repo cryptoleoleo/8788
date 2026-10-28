@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "BAW Multiwallet 侧边栏",
+  "version": "1.3.0",
+  "description": "在 Chrome 侧边栏显示 BAW，并精准识别 GMGN 的单个 BSC 代币 CA。",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "sidePanel",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://gmgn.ai/*"
+  ],
+  "action": {
+    "default_title": "在侧边栏打开 BAW Multiwallet"
+  },
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://gmgn.ai/*"],
+      "js": ["gmgn-content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8787; frame-src http://127.0.0.1:8787;"
+  }
+}

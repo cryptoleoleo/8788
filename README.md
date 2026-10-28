@@ -2,11 +2,26 @@
 
 在提供的原版 BAW 页面与 Node 服务内增加独立 Binance Agentic Wallet 身份、钱包分组、分组买卖和跟单。保留原交易函数、交易档位及默认服务端口 8787，页面品牌仍为 8788。
 
-**本仓库暂不包含截图中原 Chrome 扩展的入口文件，没有 `manifest.json`，不能直接导入 Chrome。** 原扩展仍需由提供者补齐；这里没有创建替代扩展外壳。
+## Chrome 侧边栏扩展
+
+`chrome-extension/` 是配套的 Chrome Manifest V3 侧边栏扩展源码，不修改原 BAW 页面或交易服务。扩展把现有本机 BAW 页面嵌入侧栏，并针对 GMGN 的 BSC 代币详情识别 CA：优先使用 `/bsc/token/0x…` 路由；页面弹出详情时，定位左上角折叠 CA 控件。只有唯一且可信的 CA 才自动送入本机 BAW 只读解析；无法明确定位时不猜、不显示多地址选择，也不触发买卖。
+
+`chrome-extension/` 目录使用 [MIT License](chrome-extension/LICENSE)，仅覆盖此扩展源码，不改变仓库其他文件的授权状态。
+
+### 安装
+
+1. Chrome 114 或更新版本打开 `chrome://extensions`，启用“开发者模式”。
+2. 选择“加载已解压的扩展程序”，选择本仓库的 `chrome-extension/` 目录。
+3. 允许扩展访问 `gmgn.ai`，打开 GMGN 的 BSC 代币详情页，再点击工具栏中的 **BAW Multiwallet** 图标打开侧栏。
+4. 本机 BAW 服务需在 `127.0.0.1:8787` 运行；扩展只负责把识别到的 CA 交给原 BAW 页面解析。
+
+Windows 也可解压 `releases/8788-GMGN-SidePanel-1.3.0.zip` 后运行其中的 `Open-BAW-Chrome-Extension.cmd`。该启动器会检查/启动本机服务、加载扩展并打开 GMGN。扩展只申请本机服务和 `gmgn.ai` 的权限，不读取其他网站，不自动交易。GMGN 会动态更新页面结构；当前开发环境无法直接读取其页面（HTTP 403），详情弹层识别尚未在 GMGN 实站完成验证。
 
 Mac 分发包：[Mac 1.0.0-rc2 ZIP](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip)，[SHA256](releases/BAW-Original-Multiwallet-Mac-1.0.0-rc2.zip.sha256)。下载时使用 GitHub 文件页面的 **Download raw file**。
 
 Windows 分发包：[Windows 1.0.0-rc3 ZIP](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip)，[SHA256](releases/BAW-Original-Multiwallet-Windows-1.0.0-rc3.zip.sha256)。完整解压后双击 `Install-Windows.cmd`，再运行 `%LOCALAPPDATA%\BAW-Original-Multi\program\Start-BAW.cmd`。需要 Windows x64、Node.js 24、Windows 本机安装的 CLI 1.11.0，不需要管理员权限。独立身份数据保存在同级 `data` 目录，程序更新时保留。详见包内 `Windows-先读我.txt` 和 [Windows 自动验证](https://github.com/cryptoleoleo/8788/actions/workflows/windows.yml)。
+
+GMGN 侧栏分发包：[8788-GMGN-SidePanel-1.3.0 ZIP](releases/8788-GMGN-SidePanel-1.3.0.zip)，[SHA256](releases/8788-GMGN-SidePanel-1.3.0.zip.sha256)。源码以 `chrome-extension/` 为准。
 
 Mac 版解压后先读 `先读我.txt`，再打开原生安装器。安装目录为 `~/Applications/BAW-Original-Multi`。需要 macOS 13.5+、Node.js 24 和 Binance Agentic Wallet CLI 1.11.0；完整步骤、身份配对方式和验证限制见包内说明。安装器为 arm64/x86_64 双架构，本机验证了 arm64，未在 Intel 实机验证。安装器未经 Apple 公证。
 

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BAW Multiwallet 侧边栏</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header>
+    <span class="mark" aria-hidden="true">B</span>
+    <div class="heading">
+      <strong>BAW Multiwallet</strong>
+      <span id="status">正在连接本机服务…</span>
+    </div>
+    <button id="reload" type="button" title="重新加载面板" aria-label="重新加载面板">↻</button>
+  </header>
+  <section id="gmgn-detector" aria-live="polite">
+    <div class="detector-head">
+      <strong>GMGN 当前代币</strong>
+      <button id="scan" type="button">重新扫描</button>
+    </div>
+    <div id="gmgn-status">等待 GMGN BSC 代币详情…</div>
+    <div id="current-ca" hidden>
+      <code id="ca-value"></code>
+      <button id="copy-ca" type="button">复制 CA</button>
+    </div>
+    <small>仅在精准识别到唯一 CA 时自动解析；无法确认时不会猜测或解析。</small>
+  </section>
+  <main>
+    <section id="offline" hidden>
+      <div class="offline-title">本机服务未响应</div>
+      <p>先启动 BAW 服务，再重试连接。</p>
+      <button id="retry" type="button">重新连接</button>
+    </section>
+    <iframe id="dashboard" title="BAW 多钱包面板" src="http://127.0.0.1:8787/" hidden></iframe>
+  </main>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
