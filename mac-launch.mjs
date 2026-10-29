@@ -42,6 +42,16 @@ try {
 let env;
 try {
   env = macNetworkEnvironment();
+  const options = JSON.parse(readFileSync(new URL('./mac-options.json', import.meta.url), 'utf8'));
+  if (options.cliPath != null) env.BAW_CLI = options.cliPath;
+  if (options.isolatedCliPath != null) {
+    if (typeof options.isolatedCliPath !== 'string' || !isAbsolute(options.isolatedCliPath)) throw new Error('isolatedCliPath 需要 CLI 入口绝对路径');
+    env.BAW_ISOLATED_CLI = options.isolatedCliPath;
+  }
+  if (options.sharedOriginalLogin !== undefined) {
+    if (typeof options.sharedOriginalLogin !== 'boolean') throw new Error('sharedOriginalLogin 必须为布尔值');
+    env.BAW_SHARED_ORIGINAL_LOGIN = options.sharedOriginalLogin ? '1' : '0';
+  }
   env.BAW_CLI = resolveBawEntry(env);
   env.BAW_NODE = env.BAW_NODE || process.execPath;
 } catch (error) {

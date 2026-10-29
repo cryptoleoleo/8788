@@ -11,6 +11,7 @@ walletRuntime.permission = (context, args) => {
 export async function multiApi(req, res, pathname, readBody, send) {
   const reply = data => send(res, 200, { ok: true, ...data });
   if (pathname === '/api/multi/state' && req.method === 'GET') return reply({
+    sharedOriginalLogin: walletRuntime.env.BAW_SHARED_ORIGINAL_LOGIN === '1',
     ...multiStore.data, wallets: multiStore.data.wallets.map(w => ({ ...w, ...(walletRuntime.statuses.get(w.id) || { status: 'UNCHECKED' }) })), copy: copyFeed.snapshot(),
   });
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST required' });

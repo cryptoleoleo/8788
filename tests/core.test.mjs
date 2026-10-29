@@ -101,3 +101,27 @@ test('old queued signals expire without execution and duplicate results cannot b
  const j=c.claim(client);c.result({jobId:j.id,claim:j.claim,walletId:'original',status:'completed'});
  assert.throws(()=>c.result({jobId:j.id,claim:j.claim,walletId:'original',status:'completed'}));
 });
+
+test('shared original login only inspects the existing session and never initiates or verifies pairing', async t => {
+ const s=fixture(t),calls=[];let status='CONNECTED';
+ const r=new WalletRuntime(s,{env:{BAW_SHARED_ORIGINAL_LOGIN:'1'},run:async(id,args)=>{
+  calls.push(args);
+  assert.equal(args[0],'wallet','shared login must never invoke auth');
+  return {json:{success:true,data:args[1]==='address'?{addresses:[{binanceChainId:56,address:A}]}:{status}}};
+ }});
+ const result=await r.signin('original');assert.equal(result.alreadyConnected,true);assert.equal(result.sharedLogin,true);
+ await assert.rejects(r.verify('original'),/共用登录/);
+ status='UNCONNECTED';await assert.rejects(r.signin('original'),/原跟单台/);
+ assert.equal(calls.some(args=>args[0]==='auth'),false);
+});
+test('shared original CLI and pinned isolated CLI use distinct entries without sharing identity storage', t => {
+ const s=fixture(t),w=s.createWallet('independent','g_default');
+ const originalCli=join(s.directory,'shared','dist','index.js'),isolatedCli=join(s.directory,'isolated','dist','index.js');
+ mkdirSync(join(s.directory,'isolated','dist'),{recursive:true});
+ writeFileSync(join(s.directory,'isolated','package.json'),JSON.stringify({name:'@binance/agentic-wallet',version:'1.11.0'}));
+ const r=new WalletRuntime(s,{env:{BAW_CLI:originalCli,BAW_ISOLATED_CLI:isolatedCli,BAW_SHARED_ORIGINAL_LOGIN:'1'}});
+ const original=r.spec('original'),independent=r.spec(w.id);
+ assert.deepEqual(original.args,[originalCli]);assert.equal(original.env.BINANCE_BAW_DIR,undefined);
+ assert.equal(independent.args.at(-1),isolatedCli);assert.equal(independent.args[0],'--import');
+ assert.equal(independent.env.BAW_ISOLATED_ID,w.id);assert.equal(independent.env.BINANCE_BAW_DIR,join(s.directory,'identities',w.id));
+});

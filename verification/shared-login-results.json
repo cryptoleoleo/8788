@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-29",
+  "localMode": "Shared original login; explicit opt-in in installed mac-options.json",
+  "originalCliVersion": "1.12.0",
+  "isolatedCliVersion": "1.11.0",
+  "readOnlyVerification": {
+    "pluginSession": "CONNECTED",
+    "sameBscWalletAsGangCli": true,
+    "gangPanelPort": 8789,
+    "gangProcessUnchanged": true
+  },
+  "tests": {
+    "nodePassed": 37,
+    "connectBrowser": "Passed with fake CLI only",
+    "macNativeService": "Passed with fake CLI only"
+  },
+  "authRequestsInitiated": false,
+  "transactionsExecuted": false,
+  "limitations": [
+    "No concurrent live trading validation",
+    "Existing rc5 ZIPs predate this source/local update"
+  ]
+}

@@ -30,7 +30,7 @@ export class WalletRuntime {
   }
   spec(id) {
     mkdirSync(this.store.directory, { recursive: true, mode: 0o700 });
-    const cli = this.env.BAW_CLI;
+    const cli = id === 'original' ? this.env.BAW_CLI : (this.env.BAW_ISOLATED_CLI || this.env.BAW_CLI);
     if (!cli || !isAbsolute(cli)) throw new Error('多钱包需要 BAW_CLI 指向钱包 CLI 的绝对路径，请使用对应系统的启动器');
     const env = { ...this.env };
     const args = [];
@@ -93,6 +93,14 @@ export class WalletRuntime {
   async signin(id) {
     this.store.wallet(id); // Original identity uses its existing CLI context; new identities stay isolated.
     if (this.locks.has(id)) throw new Error('此钱包正忙');
+    if (id === 'original' && this.env.BAW_SHARED_ORIGINAL_LOGIN === '1') {
+      // The other application owns login. Never replace its session from this panel.
+      let current;
+      try { current = await this.inspect(id); }
+      catch { throw new Error('无法读取共用钱包登录，请在原跟单台检查连接；本插件不会重新配对或退出该登录'); }
+      if (current.status !== 'CONNECTED') throw new Error('共用钱包未连接，请在原跟单台恢复登录，再回插件点连接');
+      return { alreadyConnected: true, sharedLogin: true, ...current };
+    }
     const r = await this.serialized(id, () => this.runner(id, ['auth', 'signin', '--json'], 60000));
     const d = r.json?.success && r.json.data;
     if (!d) throw new Error(r.json?.error?.message || '登录请求失败');
@@ -104,6 +112,7 @@ export class WalletRuntime {
     return { urlForWeb: d.urlForWeb, pairingCode: d.pairingCode, expireAt: d.expireAt };
   }
   async verify(id) {
+    if (id === 'original' && this.env.BAW_SHARED_ORIGINAL_LOGIN === '1') throw new Error('共用登录模式不允许在插件重新配对，请使用原跟单台的登录');
     const p = this.pairings.get(id); if (!p || p.until < Date.now()) throw new Error('配对已过期，请重新发起登录');
     const r = await this.serialized(id, () => this.runner(id, ['auth', 'verify', '--qrCodeId', p.qrCodeId, '--json'], 310000));
     this.pairings.delete(id);

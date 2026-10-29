@@ -58,3 +58,9 @@ node tests/original-page.mjs
 Windows 版保留相同页面、交易逻辑、多钱包分组、跟单和 Debot CA 识别。Windows 专用改动为 `.cmd` 入口、CLI 路径查找、手动 HTTP/HTTPS 代理读取、用户安装/数据目录，以及跨平台的隔离模块 file URL。Windows runner 只用虚拟 CLI 验证安装与服务，不代表真实钱包配对、实盘或 Chrome 侧栏已通过验收。
 
 Windows CI 已通过：[运行记录](https://github.com/cryptoleoleo/8788/actions/runs/40534360538)、[验证清单](verification/windows-results.json)。验证环境为 Windows Server 2025 x64 / Node 24.13.0，包含 21 项回归与 CMD 安装/启动/模拟身份服务检查；分发 ZIP 的 SHA256 与该运行核对一致。用户 Windows 桌面和真实 Binance 配对仍需分别验收。
+
+### 与其他本机程序共用原有钱包登录（Mac，可选）
+
+在安装目录的 `mac-options.json` 配置 `cliPath` 为另一个程序实际使用的 CLI JS 入口绝对路径，`sharedOriginalLogin: true`。原有身份只检查现有登录，拒绝从插件发起 signin/verify；需要恢复登录时使用原程序。可用 `isolatedCliPath` 指定经验证的 CLI 1.11.0，继续隔离新增独立身份。
+
+本模式不复制会话或钥匙串，也不协调两个程序的交易队列。此次只验证共用登录和地址一致，没有执行同时下单测试。此功能已更新源码和本机安装，旧 rc5 ZIP 尚未包含这些后续修复。
