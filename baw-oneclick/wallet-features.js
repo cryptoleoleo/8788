@@ -38,7 +38,7 @@ export function installWalletFeatures(deps) {
     mixed(choose,ui.selected,'trade');
   }
   function renderWallets() {
-    walletPage.innerHTML=`<section class="card"><div class="mw-row mw-head"><h2>我的 BSC 钱包</h2>${btn('＋ 添加身份','new-wallet','primary')}</div><div class="mw-row"><small>${ui.data.wallets.length} 个独立 BAW 身份</small>${btn('＋ 新建分组','new-group')}</div><p class="mw-note">每个新增身份单独配对 Binance App。地址由钱包 CLI 验证，不接受手动冒充已连接地址。</p></section><section class="card">${ui.data.groups.map(g=>`<div class="mw-row mw-group-heading"><h3>${esc(g.name)}</h3><button class="btn sm ghost" data-rename-group="${g.id}">重命名</button></div>${ui.data.wallets.filter(w=>w.groupId===g.id).map(w=>`<div class="mw-wallet"><div class="mw-wallet-main"><b>${esc(w.name)} ${ui.activeId===w.id?'<span class="mw-active">当前</span>':''}</b><small>${esc(w.address?deps.short(w.address):'尚未连接')}</small><small class="${available(w)?'mw-success':''}">${esc(w.status||'UNCHECKED')}</small></div><div class="mw-controls"><select data-move-wallet="${w.id}" aria-label="${esc(w.name)}的分组">${ui.data.groups.map(gr=>`<option value="${gr.id}" ${gr.id===w.groupId?'selected':''}>${esc(gr.name)}</option>`).join('')}</select><button class="btn sm ghost" data-check-wallet="${w.id}">检查</button>${w.id==='original'?'':`<button class="btn sm" data-login-wallet="${w.id}">连接</button>`}<button class="btn sm ghost" data-use-wallet="${w.id}" ${available(w)?'':'disabled'}>设为当前</button></div></div>`).join('')}`).join('')}</section><p class="mw-help">新增身份与原有身份隔离；“连接”需要你本人在 Binance App 完成配对。原有身份继续使用原来的登录方式。原页面底部的预设监听仍使用原有身份；多钱包跟买请使用“跟单”页。</p>`;
+    walletPage.innerHTML=`<section class="card"><div class="mw-row mw-head"><h2>我的 BSC 钱包</h2>${btn('＋ 添加身份','new-wallet','primary')}</div><div class="mw-row"><small>${ui.data.wallets.length} 个独立 BAW 身份</small>${btn('＋ 新建分组','new-group')}</div><p class="mw-note">每个新增身份单独配对 Binance App。地址由钱包 CLI 验证，不接受手动冒充已连接地址。</p></section><section class="card">${ui.data.groups.map(g=>`<div class="mw-row mw-group-heading"><h3>${esc(g.name)}</h3><button class="btn sm ghost" data-rename-group="${g.id}">重命名</button></div>${ui.data.wallets.filter(w=>w.groupId===g.id).map(w=>`<div class="mw-wallet"><div class="mw-wallet-main"><b>${esc(w.name)} ${ui.activeId===w.id?'<span class="mw-active">当前</span>':''}</b><small>${esc(w.address?deps.short(w.address):'尚未连接')}</small><small class="${available(w)?'mw-success':''}">${esc(w.status||'UNCHECKED')}</small></div><div class="mw-controls"><select data-move-wallet="${w.id}" aria-label="${esc(w.name)}的分组">${ui.data.groups.map(gr=>`<option value="${gr.id}" ${gr.id===w.groupId?'selected':''}>${esc(gr.name)}</option>`).join('')}</select><button class="btn sm ghost" data-check-wallet="${w.id}">检查</button><button class="btn sm" data-login-wallet="${w.id}">连接</button><button class="btn sm ghost" data-use-wallet="${w.id}" ${available(w)?'':'disabled'}>设为当前</button></div></div>`).join('')}`).join('')}</section><p class="mw-help">新增身份与原有身份隔离；“连接”需要你本人在 Binance App 完成配对。原有身份也可在这里登录，继续使用原有 CLI 身份。原页面底部的预设监听仍使用原有身份；多钱包跟买请使用“跟单”页。</p>`;
   }
   let copyIds=new Set();
   function renderCopy(task=null) {
@@ -54,12 +54,17 @@ export function installWalletFeatures(deps) {
     dialog.innerHTML=`<div class="mw-row mw-head"><h2>${esc(title)}</h2><button class="btn sm ghost" data-cancel>关闭</button></div>${body}<div class="mw-row" style="margin-top:14px"><button class="btn ghost" data-cancel>取消</button><button class="btn primary" data-accept>${esc(accept)}</button></div>`;
     dialog.showModal();return new Promise(resolve=>{const done=ok=>{dialog.oncancel=null;dialog.close();resolve(ok);};dialog.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>done(false));dialog.querySelector('[data-accept]').onclick=()=>done(true);dialog.oncancel=e=>{e.preventDefault();done(false);};});
   }
+  let pairingInProgress = false;
   async function connection(id) {
-    notify('正在创建独立身份的登录请求…');const result=await api('wallets/signin',{id});
-    if(result.alreadyConnected){notify('身份已连接并验证');await refresh();return;}
-    const ok=await modal('完成 Binance App 配对',`<div class="mw-pairing"><p>确认 App 中的配对码一致：</p><code>${esc(result.pairingCode)}</code><a href="${esc(result.urlForWeb)}" target="_blank" rel="noopener noreferrer">打开 Binance 登录页面</a><p class="mw-note">在 Binance App 完成操作后，点击下方“等待配对完成”。</p></div>`,'等待配对完成');
-    if(!ok){notify('未等待配对完成；需要时可重新发起连接。');return;}
-    notify('正在等待 Binance 配对完成，最长约 5 分钟…');await api('wallets/verify',{id});notify('独立身份已连接，BSC 地址核对通过');await refresh();
+    if (pairingInProgress) throw new Error('正在等待钱包配对，请先完成或取消当前请求');
+    pairingInProgress = true;
+    try {
+      notify('正在创建 Binance 登录请求…');const result=await api('wallets/signin',{id});
+      if(result.alreadyConnected){notify('身份已连接并验证');await refresh();return true;}
+      const ok=await modal('完成 Binance App 配对',`<div class="mw-pairing"><p>确认 App 中的配对码一致：</p><code>${esc(result.pairingCode)}</code><a href="${esc(result.urlForWeb)}" target="_blank" rel="noopener noreferrer">打开 Binance 登录页面</a><p class="mw-note">在 Binance App 完成操作后，点击下方“等待配对完成”。</p></div>`,'等待配对完成');
+      if(!ok){notify('已取消等待配对；需要时可重新点击连接。');return false;}
+      notify('正在等待 Binance 配对完成，最长约 5 分钟…');await api('wallets/verify',{id});notify('身份已连接，BSC 地址核对通过');await refresh();return true;
+    } finally { pairingInProgress = false; }
   }
   function readTask(){return {id:ui.formTaskId||undefined,name:$('#mw-task-name').value,leaders:$('#mw-leaders').value.split(/[\s,，]+/).filter(Boolean),walletIds:[...copyIds],venues:[...copyPage.querySelectorAll('[data-venue]:checked')].map(e=>e.dataset.venue),mode:$('#mw-copy-mode').value,amount:$('#mw-copy-amount').value,cooldown:Number($('#mw-cooldown').value),slippage:Number($('#mw-slip').value),minLeader:$('#mw-min-leader').value,dryRun:$('#mw-copy-dry').checked};}
   async function runBatch(kind,value,job=null) {
@@ -136,6 +141,7 @@ export function installWalletFeatures(deps) {
   window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
   renderSelection();renderWallets();renderCopy();refresh().catch(e=>notify('多钱包功能加载失败：'+e.message,true));
   return {
+    loginCurrent:()=>connection(ui.activeId || 'original'),
     handlesTrade:()=>ui.enabled,
     buy:value=>runBatch('buy',String(value)),sell:value=>runBatch('sell',String(value)),
     requestHeaders(path){if(path.startsWith('/api/multi/')||path.startsWith('/api/preset-')||['/api/send-key','/api/addr'].includes(path))return {};const id=ui.executionId||ui.activeId;return id?{'x-baw-wallet':id,...(ui.busy&&deps.getOptions().dryRun?{'x-baw-preview-only':'1'}:{}),...(ui.job?{'x-baw-copy-job':ui.job.id,'x-baw-copy-claim':ui.job.claim}:{})}:{};},

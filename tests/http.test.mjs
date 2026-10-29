@@ -7,6 +7,9 @@ test('original service serves integrated UI; new APIs authenticate and isolate m
  const page=await (await fetch(f.url+'/')).text();assert.match(page,/installWalletFeatures/);assert.match(page,/id="btnTwQuick"/);assert.doesNotMatch(page,/chrome-extension|<iframe/);
  assert.equal((await api('/api/multi/state',undefined,{'x-bridge-token':'bad'})).status,401);
  const before=(await api('/api/multi/state')).data;assert.equal(before.wallets[0].status,'UNCHECKED');assert.equal(before.copy.running.length,0);
+ const login=(await api('/api/multi/wallets/signin',{id:'original'})).data;assert.equal(login.pairingCode,'TEST-ONLY');
+ assert.equal((await api('/api/multi/wallets/verify',{id:'original'})).data.status,'CONNECTED');
+ const invalidLogin=await api('/api/multi/wallets/signin',{id:'missing'});assert.ok(invalidLogin.status>=400);assert.equal(invalidLogin.data.ok,false);
  const original=(await api('/api/multi/wallets/check',{id:'original'})).data;assert.equal(original.status,'CONNECTED');
  const group=(await api('/api/multi/groups/create',{name:'试单组'})).data.group;
  const w=(await api('/api/multi/wallets/create',{name:'wallet2',groupId:group.id})).data.wallet;

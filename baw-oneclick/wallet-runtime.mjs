@@ -91,7 +91,7 @@ export class WalletRuntime {
   }
   async address() { const c = this.current(); return c ? this.assertIdentity(c.id) : null; }
   async signin(id) {
-    if (id === 'original') throw new Error('原有身份请继续使用原来的登录方式；新增身份请点“添加钱包”');
+    this.store.wallet(id); // Original identity uses its existing CLI context; new identities stay isolated.
     if (this.locks.has(id)) throw new Error('此钱包正忙');
     const r = await this.serialized(id, () => this.runner(id, ['auth', 'signin', '--json'], 60000));
     const d = r.json?.success && r.json.data;

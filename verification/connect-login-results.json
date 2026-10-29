@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-29",
+  "rootCause": "Original top Connect only inspected wallet health; NOT_LOGGED_IN never opened pairing.",
+  "changes": [
+    "Only explicit top Connect offers Binance pairing for current identity",
+    "Original identity supported by existing signin/verify API without copying credentials",
+    "Cancel/retry and already-connected behavior covered",
+    "Automatic parsing and trading connect calls do not request interactive login"
+  ],
+  "checks": [
+    "35 Node regressions passed (HTTP test rerun after correcting invalid-ID status assertion)",
+    "Headless Chrome original-page Connect/cancel/retry/verify flow passed with fake CLI and local-only network",
+    "Installed Mac page and service updated; native background restart and readiness passed"
+  ],
+  "notVerified": [
+    "Real Binance pairing: requires user completion"
+  ],
+  "localDeployment": "/Users/rich/Applications/BAW-Original-Multi",
+  "releaseNote": "Source and local installation updated; existing rc5 ZIPs predate this login fix."
+}

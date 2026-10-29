@@ -3215,7 +3215,17 @@ document.querySelector('#sigMode').onchange = () => {
   log('已切回 Agentic 桥签名，请重新点连接');
 };
 document.querySelector('#btnPk').onclick = guard(applyPk);
-$('#btnConnect').onclick = guard(connect);
+// Only an explicit Connect click may request interactive login; trading/auto-parse never does.
+$('#btnConnect').onclick = guard(async () => {
+  try {
+    await connect();
+    if ($('#sigMode').value === 'key' || state.session === 'CONNECTED') return;
+  } catch (error) {
+    if (!/NOT_LOGGED_IN|SESSION_EXPIRED|10003000|10003002/.test(error.message || '')) throw error;
+    log('钱包尚未登录或会话已过期，正在打开 Binance 配对…', 'warn');
+  }
+  if (await multi.loginCurrent()) await connect();
+});
 $('#btnResolve').onclick = guard(resolve);
 $('#btnPresetWatchStart').onclick = guard(startPresetWatch);
 $('#btnPresetWatchStop').onclick = guard(stopPresetWatch);
